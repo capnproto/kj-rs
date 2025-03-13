@@ -1,0 +1,38 @@
+[package]
+name = "kj-rs"
+version = "0.1.0"
+license = "Apache-2.0"
+edition = "2021"
+links = "kj-async"
+
+[dependencies]
+cxx = "1.0"
+
+[build-dependencies]
+cxx-build = "1.0"
+
+[lib]
+path = "src/lib.rs"
+
+# https://github.com/bazelbuild/rules_rust/blob/13c596e81ce04b0c82c5cfb3e21f0e395b717cd6/crate_universe/src/config.rs#L442-L474
+[package.metadata.bazel]
+additive_build_file_content = """
+cc_library(
+    name = "kj-rs-headers",
+    hdrs = [
+        "include/awaiter.h",
+        "include/executor-guarded.h",
+        "include/future.h",
+        "include/linked-group.h",
+        "include/promise.h",
+        "include/waker.h",
+    ],
+    include_prefix = "kj-rs",
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+)
+"""
+# TODO(someday): This `deps` default just gets overridden, because the embedder needs to wire up a
+#   dependency on KJ itself.
+deps = [":kj-rs-headers"]
+extra_aliased_targets = { kj-rs-headers = "kj-rs-headers" }
