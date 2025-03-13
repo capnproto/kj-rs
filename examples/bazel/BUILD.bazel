@@ -1,0 +1,169 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_vendor")
+load("@rules_rust//rust:defs.bzl", "rust_library")
+load("//:build/cc_headers.bzl", "cc_headers")
+load("//:build/rust_cxx_bridge.bzl", "rust_cxx_bridge")
+
+# We define two special targets with the KJ headers as outputs, in order to expose them to the kj-rs
+# cargo build script (build.rs).
+
+cc_headers(
+    name = "kj-headers",
+    srcs = [
+        "@capnp-cpp//src/kj:kj",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_headers(
+    name = "kj-async-headers",
+    srcs = [
+        "@capnp-cpp//src/kj:kj-async",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+crates_vendor(
+    name = "crates_vendor",
+    annotations = {
+        "kj-rs": [
+            crate.annotation(
+                build_script_data = [
+                    # Expose our @capnp-cpp KJ libraries to the cargo build script.
+                    "@capnp-cpp//src/kj:kj",
+                    "@capnp-cpp//src/kj:kj-async",
+                    # Expose our @capnp-cpp KJ headers to the cargo build script.
+                    "@kj-rs-examples-bazel//:kj-headers",
+                    "@kj-rs-examples-bazel//:kj-async-headers",
+                ],
+                build_script_env = {
+                    # HACK: CXXFLAGS on my machine gets set to something with `-std=c++17`. I can't
+                    #   figure out where it's coming from, so let's just override it completely.
+                    "CXXFLAGS": "-std=c++23",
+                    # Setting CARGO_TARGET_DIR to an absolute path tells cxxbridge-cmd to generate headers
+                    # there, under $CARGO_TARGET_DIR/cxxbridge/`. Leaving it unset, or set to a relative path,
+                    # causes cxxbridge-cmd to generate headers in a build-specific directory using the `scratch`
+                    # crate. The `scratch` crate doesn't appear to be compatible with Bazel's read-only mounting
+                    # of dependencies.
+                    "CARGO_TARGET_DIR": "$${pwd}/$(GENDIR)",
+                    # TODO(soon): rules_rust contains an example that might work better than these
+                    #   hard-coded paths.
+                    #   https://github.com/bazelbuild/rules_rust/tree/main/examples/crate_universe/complicated_dependencies
+                    "LIBKJ_INCLUDE_PATH": ":".join([
+                        "$${pwd}/$(GENDIR)/external/+_repo_rules+capnp-cpp/src/kj/_virtual_includes/kj",
+                        "$${pwd}/$(GENDIR)/external/+_repo_rules+capnp-cpp/src/kj/_virtual_includes/kj-async",
+                    ]),
+                    "LIBKJ_LINK_SEARCH_PATH": "$${pwd}/$(GENDIR)/external/+_repo_rules+capnp-cpp/src/kj",
+                },
+                deps = [
+                    # kj-rs's Cargo.toml adds this `cc_library` target named `kj-rs-headers` which
+                    # contains the crate's public headers. kj-rs must depend on KJ, too, though,
+                    # forcing us to override its `deps` here. And since we override kj-rs's deps
+                    # property, we must list ":kj-rs-headers" here.
+                    ":kj-rs-headers",
+                    "@capnp-cpp//src/kj:kj",
+                    "@capnp-cpp//src/kj:kj-async",
+                ],
+            ),
+        ],
+    },
+    cargo_lockfile = ":Cargo.Bazel.lock",
+    mode = "remote",
+    packages = {
+        "kj-rs": crate.spec(
+            # When iterating on the build system (e.g. Cargo.toml, build.rs), you'll need to push
+            # your changes to a development branch, set this `branch` property to the name of your
+            # branch, then repin crates with `bazel run //:crates_vendor -- --repin`. This will
+            # regenerate the crates_vendor/BUILD.kj-rs-x.y.z.bazel file.
+            # branch = "your/development-branch",
+            git = "https://github.com/capnproto/kj-rs",
+        ),
+        "cxx": crate.spec(
+            version = "1.0",
+        ),
+    },
+    vendor_path = "crates_vendor",
+)
+
+# These two convenience aliases allow you to switch between building this Bazel package using the
+# local copy of kj-rs, or a remote-vendored one.
+
+alias(
+    name = "kj-rs",
+    actual = "@local-kj-rs//:kj_rs",
+    # actual = "@crates_vendor//:kj-rs",
+)
+
+alias(
+    name = "kj-rs-headers",
+    actual = "@local-kj-rs//:kj-rs-headers",
+    # actual = "@crates_vendor//:kj-rs-headers",
+)
+
+rust_library(
+    name = "awaitables-rust",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2021",
+    deps = [
+        ":rust-bridge",
+        # TODO(now): Why isn't :cxx transitive?
+        "@crates_vendor//:cxx",
+        ":kj-rs",
+    ],
+)
+
+rust_cxx_bridge(
+    name = "rust-bridge",
+    src = "src/lib.rs",
+    include_prefix = "kj-rs/tests",
+    deps = [
+        ":awaitables-include",
+    ],
+)
+
+cc_library(
+    name = "awaitables-include",
+    hdrs = [
+        "src/future-boilerplate.h",
+        "src/promise-boilerplate.h",
+        "src/test-promises.h",
+    ],
+    include_prefix = "kj-rs/tests",
+    strip_include_prefix = "src",
+    deps = [
+        ":kj-rs-headers",
+        "@capnp-cpp//src/kj:kj",
+        "@capnp-cpp//src/kj:kj-async",
+        "@crates_vendor//:cxx_cc",
+    ],
+)
+
+cc_library(
+    name = "awaitables-cc",
+    srcs = [
+        "src/future-boilerplate.c++",
+        "src/promise-boilerplate.c++",
+        "src/test-promises.c++",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":awaitables-include",
+        ":kj-rs",
+        ":rust-bridge",
+        ":rust-bridge/include",
+    ],
+)
+
+cc_test(
+    name = "awaitables-cc-test",
+    size = "medium",
+    srcs = [
+        "src/awaitables-cc-test.c++",
+    ],
+    deps = [
+        ":awaitables-cc",
+        ":awaitables-rust",
+        ":rust-bridge/include",
+        "@capnp-cpp//src/kj:kj-test",
+    ],
+)

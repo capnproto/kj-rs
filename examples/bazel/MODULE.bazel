@@ -1,0 +1,105 @@
+module(
+    name = "kj-rs-examples-bazel",
+    repo_name = "kj-rs-examples-bazel",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "rules_cc", version = "0.1.1")
+bazel_dep(name = "rules_rust", version = "0.58.0")
+
+# LLVM
+
+bazel_dep(name = "toolchains_llvm", version = "1.3.0")
+
+# Configure and register the toolchain.
+llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
+llvm.toolchain(llvm_version = "19.1.3")
+use_repo(llvm, "llvm_toolchain")
+
+register_toolchains("@llvm_toolchain//:all")
+
+# Cap'n Proto
+
+# capnp-cpp deps
+bazel_dep(name = "boringssl", version = "0.20250212.0", repo_name = "ssl")
+bazel_dep(name = "brotli", version = "1.1.0")
+bazel_dep(name = "platforms", version = "0.0.11")
+bazel_dep(name = "zlib", version = "1.3.1.bcr.5")
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "capnp-cpp",
+    sha256 = "96cfddf676babe345bf321ccfaabb855dfe7dc127e69c4fdd959abd52de47721",
+    strip_prefix = "capnproto-capnproto-20af9fe/c++",
+    type = "tgz",
+    url = "https://github.com/capnproto/capnproto/tarball/20af9fe2de10a2e7f621a212351d20860cc32a0d",
+)
+
+# The cxxbridge CLI tool
+
+http_archive(
+    name = "cxxbridge-cmd",
+    build_file_content = """
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("@cxxbridge_cmd_deps//:defs.bzl", "aliases", "all_crate_deps")
+
+rust_binary(
+    name = "cxxbridge-cmd",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    compile_data = [
+        "src/gen/include/cxx.h",
+    ],
+    edition = "2021",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+    ),
+)
+    """,
+    sha256 = "d93600487d429c8bf013ee96719af4e62e809ac57fc4cac24f17cf58e4526009",
+    strip_prefix = "cxxbridge-cmd-1.0.109",
+    type = "tar.gz",
+    urls = ["https://static.crates.io/crates/cxxbridge-cmd/cxxbridge-cmd-1.0.109.crate"],
+)
+
+cxxbridge_cmd_deps = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+cxxbridge_cmd_deps.from_cargo(
+    name = "cxxbridge_cmd_deps",
+    cargo_lockfile = "//:cxxbridge-cmd.Cargo.lock",
+    lockfile = "//:cxxbridge-cmd.cargo-bazel-lock.json",
+    manifests = ["@cxxbridge-cmd//:Cargo.toml"],
+)
+use_repo(
+    cxxbridge_cmd_deps,
+    "cxxbridge_cmd_deps",
+)
+
+# Vendored crates
+
+vendored = use_extension("//:build/vendor_extensions.bzl", "vendored")
+
+# The list of used repos here is kept up to date by `bazel run //:crates_vendor -- --repin`.
+use_repo(
+    vendored,
+    "crates_vendor",
+    "crates_vendor__cxx-1.0.143",
+    "crates_vendor__kj-rs-0.1.0",
+)
+
+new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
+
+# We make our local kj-rs copy available in a repo, using the BUILD.bazel file generated during
+# crate vendoring (`bazel run //:crates_vendor -- --repin`). This allows us to iterate on the local
+# kj-rs source code using Bazel to drive testing, without having to push to a development branch.
+#
+# Note that crate vendoring still depends on reaching out to GitHub, so iterating on the kj-rs
+# crate's build system (e.g. changing Cargo.toml, build.rs, or the crate's directory structure)
+# does require pushing to a development branch and repinning the crates in order to regenerate the
+# BUILD.bazel file.
+new_local_repository(
+    name = "local-kj-rs",
+    build_file = "//crates_vendor:BUILD.kj-rs-0.1.0.bazel",
+    path = "../..",
+)
