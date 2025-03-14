@@ -1,1 +1,30 @@
-build --cxxopt=-std=c++23 --host_cxxopt=-std=c++23
+# TODO(now): Switch to CI only?
+build --verbose_failures
+
+# Linux
+
+build:linux --cxxopt=-std=c++20 --host_cxxopt=-std=c++20
+
+# Windows, copied somewhat from workerd
+
+# HACK: The KJ Bazel build is configured in such a way that headers can be included at their source
+# location, or via a symlink from under the bazel-bin directory. We need to go out of our way to
+# enable symlinks on Windows to make this work; if we don't, Bazel on Windows will copy headers,
+# leading to `#pragma once` to get confused, and producing redefinition errors during the build.
+startup --windows_enable_symlinks
+build:windows --enable_runfiles
+
+# https://bazel.build/configure/windows#clang
+build:windows --extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl
+build:windows --extra_execution_platforms=//:x64_windows-clang-cl
+
+build:windows --cxxopt='/std:c++20' --host_cxxopt='/std:c++20'
+build:windows --copt='/D_CRT_USE_BUILTIN_OFFSETOF' --host_copt='/D_CRT_USE_BUILTIN_OFFSETOF'
+build:windows --copt='/DWIN32_LEAN_AND_MEAN' --host_copt='/DWIN32_LEAN_AND_MEAN'
+# The `/std:c++20` argument is unused during BoringSSL compilation and we don't
+# want a warning when compiling each file.
+build:windows --copt='-Wno-unused-command-line-argument' --host_copt='-Wno-unused-command-line-argument'
+
+# MSVC disappointingly sets __cplusplus to 199711L by default. Defining /Zc:__cplusplus makes it
+# set the correct value. We currently don't check __cplusplus, but some dependencies do.
+build:windows --cxxopt='/Zc:__cplusplus' --host_cxxopt='/Zc:__cplusplus'

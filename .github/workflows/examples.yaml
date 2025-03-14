@@ -11,10 +11,22 @@ env:
 
 jobs:
   bazel:
+    strategy:
+      matrix:
+        # TODO(now): Figure out why Windows won't build.
+        # os: [ubuntu-22.04, windows-2022]
+        os: [ubuntu-22.04]
+        target-arch: [ X64 ]
+        include:
+          - os-name: linux
+            os: ubuntu-22.04
+          # - os-name: windows
+          #   os: windows-2022
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    name: bazel (${{ matrix.os-name }})
 
     steps:
     - uses: actions/checkout@v4
     - name: Bazel Test
-      run: cd examples/bazel && bazel test --cxxopt=-std=c++23 --host_cxxopt=-std=c++23 //...
+      run: cd examples/bazel && bazel test --config=${{ matrix.os-name }} //...

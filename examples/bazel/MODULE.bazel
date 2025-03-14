@@ -18,6 +18,10 @@ use_repo(llvm, "llvm_toolchain")
 
 register_toolchains("@llvm_toolchain//:all")
 
+# Required by `--extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl` in .bazelrc.
+cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure_extension")
+use_repo(cc_configure, "local_config_cc")
+
 # Cap'n Proto
 
 # capnp-cpp deps
