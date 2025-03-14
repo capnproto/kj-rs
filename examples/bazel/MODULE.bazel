@@ -71,8 +71,8 @@ rust_binary(
 cxxbridge_cmd_deps = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 cxxbridge_cmd_deps.from_cargo(
     name = "cxxbridge_cmd_deps",
-    cargo_lockfile = "//:cxxbridge-cmd.Cargo.lock",
-    lockfile = "//:cxxbridge-cmd.cargo-bazel-lock.json",
+    cargo_lockfile = "//deps/rust:cxxbridge-cmd.Cargo.lock",
+    lockfile = "//deps/rust:cxxbridge-cmd.cargo-bazel-lock.json",
     manifests = ["@cxxbridge-cmd//:Cargo.toml"],
 )
 use_repo(
@@ -84,7 +84,7 @@ use_repo(
 
 vendored = use_extension("//:build/vendor_extensions.bzl", "vendored")
 
-# The list of used repos here is kept up to date by `bazel run //:crates_vendor -- --repin`.
+# The list of used repos here is kept up to date by `bazel run //deps/rust:crates_vendor -- --repin`.
 use_repo(
     vendored,
     "crates_vendor",
@@ -95,15 +95,16 @@ use_repo(
 new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
 
 # We make our local kj-rs copy available in a repo, using the BUILD.bazel file generated during
-# crate vendoring (`bazel run //:crates_vendor -- --repin`). This allows us to iterate on the local
-# kj-rs source code using Bazel to drive testing, without having to push to a development branch.
+# crate vendoring (`bazel run //deps/rust:crates_vendor -- --repin`). This allows us to iterate on
+# the local kj-rs source code using Bazel to drive testing, without having to push to a development
+# branch.
 #
 # Note that crate vendoring still depends on reaching out to GitHub, so iterating on the kj-rs
-# crate's build system (e.g. changing Cargo.toml, build.rs, or the crate's directory structure)
-# does require pushing to a development branch and repinning the crates in order to regenerate the
+# crate's build system (e.g. changing Cargo.toml, build.rs, or the crate's directory structure) does
+# require pushing to a development branch and repinning the crates in order to regenerate the
 # BUILD.bazel file.
 new_local_repository(
     name = "local-kj-rs",
-    build_file = "//crates_vendor:BUILD.kj-rs-0.1.0.bazel",
+    build_file = "//deps/rust/crates:BUILD.kj-rs-0.1.0.bazel",
     path = "../..",
 )

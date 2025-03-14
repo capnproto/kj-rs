@@ -13,7 +13,7 @@ There are several ways to use rules_rust to maintain Rust dependencies, vendorin
 Periodically, in particular whenever the kj-rs build system, directory structure, or version is modified, we must repin our Rust dependencies in order to regenerate kj-rs's BUILD.bazel file.
 
 ```sh
-bazel run //:crates_vendor -- --repin
+bazel run //deps/rust:crates_vendor -- --repin
 ```
 
 ### `cxxbridge-cmd` dependency

@@ -1,0 +1,82 @@
+load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_vendor")
+load("//:build/cc_headers.bzl", "cc_headers")
+
+# We define two special targets with the KJ headers as outputs, in order to expose them to the kj-rs
+# cargo build script (build.rs).
+
+cc_headers(
+    name = "kj-headers",
+    srcs = [
+        "@capnp-cpp//src/kj:kj",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_headers(
+    name = "kj-async-headers",
+    srcs = [
+        "@capnp-cpp//src/kj:kj-async",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+crates_vendor(
+    name = "crates_vendor",
+    annotations = {
+        "kj-rs": [
+            crate.annotation(
+                build_script_data = [
+                    # Expose our @capnp-cpp KJ libraries to the cargo build script.
+                    "@capnp-cpp//src/kj:kj",
+                    "@capnp-cpp//src/kj:kj-async",
+                    # Expose our @capnp-cpp KJ headers to the cargo build script.
+                    "@kj-rs-examples-bazel//deps/rust:kj-headers",
+                    "@kj-rs-examples-bazel//deps/rust:kj-async-headers",
+                ],
+                build_script_env = {
+                    # HACK: CXXFLAGS on my machine gets set to something with `-std=c++17`. I can't
+                    #   figure out where it's coming from, so let's just override it completely.
+                    "CXXFLAGS": "-std=c++23",
+                    # Setting CARGO_TARGET_DIR to an absolute path tells cxxbridge-cmd to generate headers
+                    # there, under $CARGO_TARGET_DIR/cxxbridge/`. Leaving it unset, or set to a relative path,
+                    # causes cxxbridge-cmd to generate headers in a build-specific directory using the `scratch`
+                    # crate. The `scratch` crate doesn't appear to be compatible with Bazel's read-only mounting
+                    # of dependencies.
+                    "CARGO_TARGET_DIR": "$${pwd}/$(GENDIR)",
+                    # TODO(soon): rules_rust contains an example that might work better than these
+                    #   hard-coded paths.
+                    #   https://github.com/bazelbuild/rules_rust/tree/main/examples/crate_universe/complicated_dependencies
+                    "LIBKJ_INCLUDE_PATH": ":".join([
+                        "$${pwd}/$(GENDIR)/external/+_repo_rules+capnp-cpp/src/kj/_virtual_includes/kj",
+                        "$${pwd}/$(GENDIR)/external/+_repo_rules+capnp-cpp/src/kj/_virtual_includes/kj-async",
+                    ]),
+                    "LIBKJ_LINK_SEARCH_PATH": "$${pwd}/$(GENDIR)/external/+_repo_rules+capnp-cpp/src/kj",
+                },
+                deps = [
+                    # kj-rs's Cargo.toml adds this `cc_library` target named `kj-rs-headers` which
+                    # contains the crate's public headers. kj-rs must depend on KJ, too, though,
+                    # forcing us to override its `deps` here. And since we override kj-rs's deps
+                    # property, we must list ":kj-rs-headers" here.
+                    ":kj-rs-headers",
+                    "@capnp-cpp//src/kj:kj",
+                    "@capnp-cpp//src/kj:kj-async",
+                ],
+            ),
+        ],
+    },
+    cargo_lockfile = ":Cargo.Bazel.lock",
+    mode = "remote",
+    packages = {
+        "kj-rs": crate.spec(
+            # When iterating on the build system (e.g. Cargo.toml, build.rs), you'll need to push
+            # your changes to a development branch, set this `branch` property to the name of your
+            # branch, then repin crates with `bazel run //deps/rust:crates_vendor -- --repin`. This
+            # will regenerate the crates_vendor/BUILD.kj-rs-x.y.z.bazel file. branch =
+            # "your/development-branch",
+            git = "https://github.com/capnproto/kj-rs",
+        ),
+        "cxx": crate.spec(
+            version = "1.0",
+        ),
+    },
+)
