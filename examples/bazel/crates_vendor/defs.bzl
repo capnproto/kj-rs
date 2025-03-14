@@ -488,7 +488,7 @@ def crate_repositories():
     maybe(
         new_git_repository,
         name = "crates_vendor__kj-rs-0.1.0",
-        commit = "dbb7c56f66a51465e958b5070512f752974bb806",
+        commit = "72c50d33dd94b689a6a66aaebfae3fe47bb4ed6f",
         init_submodules = True,
         remote = "https://github.com/capnproto/kj-rs",
         build_file = Label("//crates_vendor:BUILD.kj-rs-0.1.0.bazel"),

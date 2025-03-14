@@ -162,7 +162,7 @@
   "moduleExtensions": {
     "//:build/vendor_extensions.bzl%vendored": {
       "general": {
-        "bzlTransitiveDigest": "88xPA0yrPWbIY67VHNLsv5GrhCP51kWaxXUWz/JUiKA=",
+        "bzlTransitiveDigest": "Ja9kxtN13sXfiDMe3FBGNVnNJcBF4z+yg1tn7atJyys=",
         "usagesDigest": "xIZDmZF7djSePlpILXoTnGzopVEbwe8tWFkSI+jAhnM=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -262,7 +262,7 @@
           "crates_vendor__kj-rs-0.1.0": {
             "repoRuleId": "@@bazel_tools//tools/build_defs/repo:git.bzl%git_repository",
             "attributes": {
-              "commit": "dbb7c56f66a51465e958b5070512f752974bb806",
+              "commit": "72c50d33dd94b689a6a66aaebfae3fe47bb4ed6f",
               "init_submodules": true,
               "remote": "https://github.com/capnproto/kj-rs",
               "build_file": "@@//crates_vendor:BUILD.kj-rs-0.1.0.bazel"

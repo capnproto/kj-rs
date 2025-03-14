@@ -130,7 +130,7 @@ checksum = "a0d2fde1f7b3d48b8395d5f2de76c18a528bd6a9cdde438df747bfcba3e05d6f"
 [[package]]
 name = "kj-rs"
 version = "0.1.0"
-source = "git+https://github.com/capnproto/kj-rs?branch=harris%2Finitial-import#dbb7c56f66a51465e958b5070512f752974bb806"
+source = "git+https://github.com/capnproto/kj-rs#72c50d33dd94b689a6a66aaebfae3fe47bb4ed6f"
 dependencies = [
  "cxx",
  "cxx-build",
