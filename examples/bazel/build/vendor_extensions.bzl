@@ -3,7 +3,7 @@
 """Bzlmod module extensions"""
 
 load(
-    "//crates_vendor:crates.bzl",
+    "//deps/rust/crates:crates.bzl",
     "crate_repositories",
 )
 
