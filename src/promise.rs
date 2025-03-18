@@ -1,5 +1,14 @@
 use cxx::ExternType;
 
+use crate::PromiseAwaiter;
+
+use std::marker::PhantomData;
+
+use std::future::Future;
+use std::pin::Pin;
+use std::task::Context;
+use std::task::Poll;
+
 type CxxResult<T> = std::result::Result<T, cxx::Exception>;
 
 // The inner pointer is never read on Rust's side, so Rust thinks it's dead code.
@@ -24,7 +33,7 @@ impl Drop for OwnPromiseNode {
         //
         // https://doc.rust-lang.org/std/ptr/index.html#safety
         unsafe {
-            crate::ffi::own_promise_node_drop_in_place(PtrOwnPromiseNode(self));
+            crate::ffi::own_promise_node_drop_in_place(self);
         }
     }
 }
@@ -39,11 +48,41 @@ unsafe impl ExternType for OwnPromiseNode {
     type Kind = cxx::kind::Trivial;
 }
 
-#[repr(transparent)]
-pub struct PtrOwnPromiseNode(*mut OwnPromiseNode);
+pub trait KjPromise: Sized {
+    type Output;
+    fn into_own_promise_node(self) -> OwnPromiseNode;
 
-// Safety: Raw pointers are the same size in both languages.
-unsafe impl ExternType for PtrOwnPromiseNode {
-    type Id = cxx::type_id!("::kj_rs::PtrOwnPromiseNode");
-    type Kind = cxx::kind::Trivial;
+    // Safety: You must guarantee that `node` was previously returned from this same type's
+    // `into_own_promise_node()` implementation.
+    unsafe fn unwrap(node: OwnPromiseNode) -> CxxResult<Self::Output>;
+}
+
+pub struct PromiseFuture<P: KjPromise> {
+    awaiter: PromiseAwaiter,
+    _marker: PhantomData<P>,
+}
+
+impl<P: KjPromise> PromiseFuture<P> {
+    pub fn new(promise: P) -> Self {
+        PromiseFuture {
+            awaiter: PromiseAwaiter::new(promise.into_own_promise_node()),
+            _marker: Default::default(),
+        }
+    }
+}
+
+impl<P: KjPromise> Future for PromiseFuture<P> {
+    type Output = CxxResult<P::Output>;
+    fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+        // TODO(now): Safety comment.
+        let mut awaiter = unsafe { self.map_unchecked_mut(|s| &mut s.awaiter) };
+        if awaiter.as_mut().poll(cx) {
+            let node = awaiter.get_awaiter().take_own_promise_node();
+            // TODO(now): Safety comment.
+            let value = unsafe { P::unwrap(node) };
+            Poll::Ready(value)
+        } else {
+            Poll::Pending
+        }
+    }
 }

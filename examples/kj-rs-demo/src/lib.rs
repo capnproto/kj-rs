@@ -1,10 +1,8 @@
-mod promise;
-pub use promise::Promise;
-
 mod future_boilerplate;
 use future_boilerplate::*;
 
 mod promise_boilerplate;
+use promise_boilerplate::*;
 
 mod test_futures;
 use test_futures::*;
@@ -36,12 +34,12 @@ mod ffi {
         include!("kj-rs-demo/promise-boilerplate.h");
 
         // TODO(now): Generate boilerplate with a macro.
-        type PromiseVoid = crate::Promise<()>;
+        type PromiseVoid = crate::PromiseVoid;
         fn own_promise_node_unwrap_void(node: OwnPromiseNode) -> Result<()>;
         unsafe fn promise_drop_in_place_void(promise: *mut PromiseVoid);
         fn promise_into_own_promise_node_void(promise: PromiseVoid) -> OwnPromiseNode;
 
-        type PromiseI32 = crate::Promise<i32>;
+        type PromiseI32 = crate::PromiseI32;
         fn own_promise_node_unwrap_i32(node: OwnPromiseNode) -> Result<i32>;
         unsafe fn promise_drop_in_place_i32(promise: *mut PromiseI32);
         fn promise_into_own_promise_node_i32(promise: PromiseI32) -> OwnPromiseNode;

@@ -13,7 +13,6 @@ use std::task::Wake;
 use std::task::Waker;
 
 use crate::Error;
-use crate::Result;
 
 use crate::BoxFutureI32;
 use crate::BoxFutureVoid;
