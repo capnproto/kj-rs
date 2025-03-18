@@ -32,7 +32,6 @@ mod ffi {
             waker: &KjWaker,
             fulfiller: Pin<&mut BoxFutureFulfillerVoid>,
         ) -> bool;
-        unsafe fn box_future_drop_in_place_void(ptr: *mut BoxFutureVoid);
 
         // TODO(now): Generate boilerplate with a macro.
         fn box_future_poll_fallible_void(
@@ -40,14 +39,12 @@ mod ffi {
             waker: &KjWaker,
             fulfiller: Pin<&mut BoxFutureFulfillerFallibleVoid>,
         ) -> Result<bool>;
-        unsafe fn box_future_drop_in_place_fallible_void(ptr: *mut BoxFutureFallibleVoid);
 
         fn box_future_poll_fallible_i32(
             future: Pin<&mut BoxFutureFallibleI32>,
             waker: &KjWaker,
             fulfiller: Pin<&mut BoxFutureFulfillerFallibleI32>,
         ) -> Result<bool>;
-        unsafe fn box_future_drop_in_place_fallible_i32(ptr: *mut BoxFutureFallibleI32);
     }
 
     unsafe extern "C++" {

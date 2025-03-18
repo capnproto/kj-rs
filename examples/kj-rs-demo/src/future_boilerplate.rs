@@ -63,7 +63,11 @@ pub fn box_future_poll_void(
     }
 }
 
-pub unsafe fn box_future_drop_in_place_void(ptr: *mut BoxFutureVoid) {
+// TODO(now): Safety comment.
+#[doc(hidden)]
+#[allow(non_snake_case)]
+#[export_name = "box_future_drop_in_place_void"]
+pub unsafe extern "C" fn box_future_drop_in_place_void(ptr: *mut BoxFutureVoid) {
     std::ptr::drop_in_place(ptr);
 }
 
@@ -115,7 +119,10 @@ pub fn box_future_poll_fallible_void(
     }
 }
 
-pub unsafe fn box_future_drop_in_place_fallible_void(ptr: *mut BoxFutureFallibleVoid) {
+#[doc(hidden)]
+#[allow(non_snake_case)]
+#[export_name = "box_future_drop_in_place_fallible_void"]
+pub unsafe extern "C" fn box_future_drop_in_place_fallible_void(ptr: *mut BoxFutureFallibleVoid) {
     std::ptr::drop_in_place(ptr);
 }
 
@@ -160,6 +167,9 @@ pub fn box_future_poll_fallible_i32(
     }
 }
 
-pub unsafe fn box_future_drop_in_place_fallible_i32(ptr: *mut BoxFutureFallibleI32) {
+#[doc(hidden)]
+#[allow(non_snake_case)]
+#[export_name = "box_future_drop_in_place_fallible_i32"]
+pub unsafe extern "C" fn box_future_drop_in_place_fallible_i32(ptr: *mut BoxFutureFallibleI32) {
     std::ptr::drop_in_place(ptr);
 }

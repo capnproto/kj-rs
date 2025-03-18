@@ -8,7 +8,7 @@ void box_future_drop_in_place(BoxFuture<void>* self) noexcept {
   box_future_drop_in_place_void(self);
 }
 template <>
-bool box_future_poll(BoxFuture<void>& self, const kj_rs::KjWaker& waker, kj_rs::BoxFutureFulfiller<void>& fulfiller) {
+bool box_future_poll(BoxFutureVoid& self, const kj_rs::KjWaker& waker, kj_rs::BoxFutureFulfiller<void>& fulfiller) {
   return box_future_poll_void(self, waker, fulfiller);
 }
 
