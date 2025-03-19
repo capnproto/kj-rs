@@ -227,7 +227,7 @@ KJ_TEST("co_awaiting a BoxFuture<Fallible<T>> from C++ can throw") {
       maybeException = kj::getCaughtExceptionAsKj();
     }
     auto& exception = KJ_ASSERT_NONNULL(maybeException, "should have thrown");
-    KJ_EXPECT(exception.getDescription() == "std::exception: test error");
+    KJ_EXPECT(exception.getDescription() == "test error");
   }().wait(waitScope);
 }
 

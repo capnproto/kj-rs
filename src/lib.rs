@@ -8,7 +8,9 @@ use awaiter::WakerRef;
 mod lazy_pin_init;
 
 mod future;
+pub use future::box_future_poll;
 pub use future::BoxFuture;
+pub use future::FuturePollStatus;
 
 mod promise;
 pub use promise::OwnPromiseNode;

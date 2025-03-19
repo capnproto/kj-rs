@@ -2,59 +2,74 @@
 
 #include <kj-rs/waker.h>
 
+#include <kj/debug.h>
+
 #include <concepts>
+#include <cstdint>
 
 namespace kj_rs {
 
-// Corresponds to Result on the Rust side. Does not currently wrap an exception, though maybe it
-// should.
+// Tri-state returned from `box_future_poll()`, indicating the state of its output parameter.
+//
+// Serves the same purpose as `cxx-async`'s FuturePollStatus:
+// https://github.com/pcwalton/cxx-async/blob/ac98030dd6e5090d227e7fadca13ec3e4b4e7be7/cxx-async/include/rust/cxx_async.h#L422
+enum class FuturePollStatus: uint8_t {
+  // `box_future_poll()` returns Pending to indicate it did not write anything to its output
+  // parameter.
+  Pending,
+  // `box_future_poll()` returns Complete to indicate it wrote a value to its output
+  // parameter.
+  Complete,
+  // `box_future_poll()` returns Error to indicate it wrote an error to its output parameter.
+  Error,
+};
+
+// A class with space for a `T` or a `rust::String`, whichever is larger.
 template <typename T>
-class Fallible {
+class BoxFuturePoller {
 public:
-  template <typename... U>
-  Fallible(U&&... args): value(kj::fwd<U>(args)...) {}
-  operator T&() { return value; }
+  BoxFuturePoller() {}
+  ~BoxFuturePoller() noexcept(false) {}
+
+  // Call `pollFunc()` with a pointer to space to which a `T` (successful result) or a
+  // `rust::String` (error result) may be written, then propagate the result or error to `output`
+  // depending on the return value of `pollFunc()`.
+  template <typename F>
+  bool poll(F&& pollFunc, kj::_::ExceptionOr<T>& output) {
+    switch (pollFunc(&result)) {
+      case ::kj_rs::FuturePollStatus::Pending:
+        return false;
+      case ::kj_rs::FuturePollStatus::Complete:
+        output.value = toResult();
+        return true;
+      case ::kj_rs::FuturePollStatus::Error: {
+        output.addException(toException());
+        return true;
+      }
+    }
+
+    KJ_UNREACHABLE;
+  }
+
 private:
-  T value;
+  T toResult() {
+    auto ret = kj::mv(result);
+    kj::dtor(result);
+    return ret;
+  }
+
+  kj::Exception toException() {
+    auto description = ::kj::ArrayPtr<const char>(error.data(), error.size());
+    auto exception = KJ_EXCEPTION(FAILED, kj::str(description));
+    kj::dtor(error);
+    return exception;
+  }
+
+  union {
+    T result;
+    ::rust::String error;
+  };
 };
-
-template <>
-class Fallible<void> {};
-
-
-template <typename T>
-struct RemoveFallible_ {
-  using Type = T;
-};
-template <typename T>
-struct RemoveFallible_<Fallible<T>> {
-  using Type = T;
-};
-template <typename T>
-using RemoveFallible = typename RemoveFallible_<T>::Type;
-
-template <typename T>
-class BoxFutureFulfiller {
-public:
-  BoxFutureFulfiller(kj::_::ExceptionOr<RemoveFallible<T>>& resultRef): result(resultRef) {}
-  void fulfill(RemoveFallible<T> value) { result.value = kj::mv(value); }
-private:
-  kj::_::ExceptionOr<RemoveFallible<T>>& result;
-};
-
-template <>
-class BoxFutureFulfiller<void> {
-public:
-  BoxFutureFulfiller(kj::_::ExceptionOr<kj::_::Void>& resultRef): result(resultRef) {}
-  void fulfill(kj::_::Void value) { result.value = kj::mv(value); }
-  // For Rust, which doesn't know about our kj::_::Void type.
-  void fulfill() { fulfill({}); }
-private:
-  kj::_::ExceptionOr<kj::_::Void>& result;
-};
-
-template <>
-class BoxFutureFulfiller<Fallible<void>>: public BoxFutureFulfiller<void> {};
 
 template <typename F>
 concept Future = requires(F f) {

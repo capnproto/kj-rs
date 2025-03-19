@@ -18,51 +18,18 @@ mod ffi {
     #[namespace = "kj_rs"]
     unsafe extern "C++" {
         include!("kj-rs/waker.h");
-        type KjWaker = kj_rs::KjWaker;
         type OwnPromiseNode = kj_rs::OwnPromiseNode;
     }
 
     // -----------------------------------------------------
     // Boilerplate
 
-    extern "Rust" {
-        // TODO(now): Generate boilerplate with a macro.
-        fn box_future_poll_void(
-            future: Pin<&mut BoxFutureVoid>,
-            waker: &KjWaker,
-            fulfiller: Pin<&mut BoxFutureFulfillerVoid>,
-        ) -> bool;
-
-        // TODO(now): Generate boilerplate with a macro.
-        fn box_future_poll_fallible_void(
-            future: Pin<&mut BoxFutureFallibleVoid>,
-            waker: &KjWaker,
-            fulfiller: Pin<&mut BoxFutureFulfillerFallibleVoid>,
-        ) -> Result<bool>;
-
-        fn box_future_poll_fallible_i32(
-            future: Pin<&mut BoxFutureFallibleI32>,
-            waker: &KjWaker,
-            fulfiller: Pin<&mut BoxFutureFulfillerFallibleI32>,
-        ) -> Result<bool>;
-    }
-
     unsafe extern "C++" {
         include!("kj-rs-demo/future-boilerplate.h");
 
-        // TODO(now): Generate boilerplate with a macro.
         type BoxFutureVoid = crate::BoxFutureVoid;
-        type BoxFutureFulfillerVoid;
-        fn fulfill(self: Pin<&mut BoxFutureFulfillerVoid>);
-
-        // TODO(now): Generate boilerplate with a macro.
         type BoxFutureFallibleVoid = crate::BoxFutureFallibleVoid;
-        type BoxFutureFulfillerFallibleVoid;
-        fn fulfill(self: Pin<&mut BoxFutureFulfillerFallibleVoid>);
-
         type BoxFutureFallibleI32 = crate::BoxFutureFallibleI32;
-        type BoxFutureFulfillerFallibleI32;
-        fn fulfill(self: Pin<&mut BoxFutureFulfillerFallibleI32>, value: i32);
     }
 
     unsafe extern "C++" {

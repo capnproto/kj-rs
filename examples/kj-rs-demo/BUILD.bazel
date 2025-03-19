@@ -68,7 +68,6 @@ cc_library(
 cc_library(
     name = "awaitables-cc",
     srcs = [
-        "src/future-boilerplate.c++",
         "src/promise-boilerplate.c++",
         "src/test-promises.c++",
     ],

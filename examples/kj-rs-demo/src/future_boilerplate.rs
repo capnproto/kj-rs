@@ -4,28 +4,26 @@ use std::pin::Pin;
 
 use std::task::Context;
 use std::task::Poll;
-use std::task::Poll::Pending;
-use std::task::Poll::Ready;
-use std::task::Waker;
 
-use cxx::ExternType;
-
-use crate::ffi::KjWaker;
+use kj_rs::FuturePollStatus;
+use kj_rs::KjWaker;
 
 use crate::Result;
 
 // =======================================================================================
 
-pub struct BoxFutureVoid(::kj_rs::BoxFuture<()>);
+pub struct BoxFutureVoid(::kj_rs::BoxFuture<std::result::Result<(), std::convert::Infallible>>);
 
-impl<F: Future<Output = ()> + Send + 'static> From<Pin<Box<F>>> for BoxFutureVoid {
+impl<F: Future<Output = std::result::Result<(), std::convert::Infallible>> + Send + 'static>
+    From<Pin<Box<F>>> for BoxFutureVoid
+{
     fn from(value: Pin<Box<F>>) -> Self {
         Self(value.into())
     }
 }
 
 impl Future for BoxFutureVoid {
-    type Output = ();
+    type Output = std::result::Result<(), std::convert::Infallible>;
     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         // TODO(now): Safety comment.
         let pinned = unsafe { self.map_unchecked_mut(|s| &mut s.0) };
@@ -42,25 +40,9 @@ impl Future for BoxFutureVoid {
 //
 // https://doc.rust-lang.org/std/keyword.dyn.html
 // - "As such, a dyn Trait reference contains two pointers."
-unsafe impl ExternType for BoxFutureVoid {
-    type Id = cxx::type_id!("kj_rs_demo::BoxFutureVoid");
-    type Kind = cxx::kind::Trivial;
-}
-
-pub fn box_future_poll_void(
-    future: Pin<&mut BoxFutureVoid>,
-    waker: &KjWaker,
-    fulfiller: Pin<&mut crate::ffi::BoxFutureFulfillerVoid>,
-) -> bool {
-    let waker = Waker::from(waker);
-    let mut cx = Context::from_waker(&waker);
-    match future.poll(&mut cx) {
-        Ready(_v) => {
-            fulfiller.fulfill();
-            true
-        }
-        Pending => false,
-    }
+unsafe impl ::cxx::ExternType for BoxFutureVoid {
+    type Id = ::cxx::type_id!("kj_rs_demo::BoxFutureVoid");
+    type Kind = ::cxx::kind::Trivial;
 }
 
 // TODO(now): Safety comment.
@@ -68,7 +50,19 @@ pub fn box_future_poll_void(
 #[allow(non_snake_case)]
 #[export_name = "box_future_drop_in_place_void"]
 pub unsafe extern "C" fn box_future_drop_in_place_void(ptr: *mut BoxFutureVoid) {
-    std::ptr::drop_in_place(ptr);
+    ::std::ptr::drop_in_place(ptr);
+}
+
+// TODO(now): Safety comment.
+#[doc(hidden)]
+#[allow(non_snake_case)]
+#[export_name = "box_future_poll_void"]
+pub unsafe extern "C" fn box_future_poll_void(
+    future: Pin<&mut BoxFutureVoid>,
+    waker: &KjWaker,
+    result: *mut (),
+) -> ::kj_rs::FuturePollStatus {
+    ::kj_rs::box_future_poll::<BoxFutureVoid, (), ::std::convert::Infallible>(future, waker, result)
 }
 
 // ---------------------------------------------------------
@@ -97,33 +91,27 @@ impl Future for BoxFutureFallibleVoid {
 //
 // https://doc.rust-lang.org/std/keyword.dyn.html
 // - "As such, a dyn Trait reference contains two pointers."
-unsafe impl ExternType for BoxFutureFallibleVoid {
-    type Id = cxx::type_id!("kj_rs_demo::BoxFutureFallibleVoid");
-    type Kind = cxx::kind::Trivial;
-}
-
-pub fn box_future_poll_fallible_void(
-    future: Pin<&mut BoxFutureFallibleVoid>,
-    waker: &KjWaker,
-    fulfiller: Pin<&mut crate::ffi::BoxFutureFulfillerFallibleVoid>,
-) -> Result<bool> {
-    let waker = Waker::from(waker);
-    let mut cx = Context::from_waker(&waker);
-    match future.poll(&mut cx) {
-        Ready(Ok(_v)) => {
-            fulfiller.fulfill();
-            Ok(true)
-        }
-        Ready(Err(e)) => Err(e),
-        Pending => Ok(false),
-    }
+unsafe impl ::cxx::ExternType for BoxFutureFallibleVoid {
+    type Id = ::cxx::type_id!("::kj_rs_demo::BoxFutureFallibleVoid");
+    type Kind = ::cxx::kind::Trivial;
 }
 
 #[doc(hidden)]
 #[allow(non_snake_case)]
 #[export_name = "box_future_drop_in_place_fallible_void"]
 pub unsafe extern "C" fn box_future_drop_in_place_fallible_void(ptr: *mut BoxFutureFallibleVoid) {
-    std::ptr::drop_in_place(ptr);
+    ::std::ptr::drop_in_place(ptr);
+}
+
+#[doc(hidden)]
+#[allow(non_snake_case)]
+#[export_name = "box_future_poll_fallible_void"]
+pub unsafe extern "C" fn box_future_poll_fallible_void(
+    future: Pin<&mut BoxFutureFallibleVoid>,
+    waker: &KjWaker,
+    result: *mut (),
+) -> ::kj_rs::FuturePollStatus {
+    ::kj_rs::box_future_poll::<BoxFutureFallibleVoid, (), crate::Error>(future, waker, result)
 }
 
 // ---------------------------------------------------------
@@ -145,31 +133,25 @@ impl Future for BoxFutureFallibleI32 {
     }
 }
 
-unsafe impl ExternType for BoxFutureFallibleI32 {
-    type Id = cxx::type_id!("kj_rs_demo::BoxFutureFallibleI32");
-    type Kind = cxx::kind::Trivial;
-}
-
-pub fn box_future_poll_fallible_i32(
-    future: Pin<&mut BoxFutureFallibleI32>,
-    waker: &KjWaker,
-    fulfiller: Pin<&mut crate::ffi::BoxFutureFulfillerFallibleI32>,
-) -> Result<bool> {
-    let waker = Waker::from(waker);
-    let mut cx = Context::from_waker(&waker);
-    match future.poll(&mut cx) {
-        Ready(Ok(v)) => {
-            fulfiller.fulfill(v);
-            Ok(true)
-        }
-        Ready(Err(e)) => Err(e),
-        Pending => Ok(false),
-    }
+unsafe impl ::cxx::ExternType for BoxFutureFallibleI32 {
+    type Id = ::cxx::type_id!("kj_rs_demo::BoxFutureFallibleI32");
+    type Kind = ::cxx::kind::Trivial;
 }
 
 #[doc(hidden)]
 #[allow(non_snake_case)]
 #[export_name = "box_future_drop_in_place_fallible_i32"]
 pub unsafe extern "C" fn box_future_drop_in_place_fallible_i32(ptr: *mut BoxFutureFallibleI32) {
-    std::ptr::drop_in_place(ptr);
+    ::std::ptr::drop_in_place(ptr);
+}
+
+#[doc(hidden)]
+#[allow(non_snake_case)]
+#[export_name = "box_future_poll_fallible_i32"]
+pub unsafe extern "C" fn box_future_poll_fallible_i32(
+    future: Pin<&mut BoxFutureFallibleI32>,
+    waker: &KjWaker,
+    result: *mut (),
+) -> FuturePollStatus {
+    ::kj_rs::box_future_poll::<BoxFutureFallibleI32, i32, crate::Error>(future, waker, result)
 }

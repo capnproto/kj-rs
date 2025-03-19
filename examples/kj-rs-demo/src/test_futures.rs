@@ -20,10 +20,10 @@ use crate::BoxFutureFallibleVoid;
 use crate::BoxFutureVoid;
 
 pub fn new_pending_future_void() -> BoxFutureVoid {
-    Box::pin(std::future::pending()).into()
+    Box::pin(async { Ok(std::future::pending().await) }).into()
 }
 pub fn new_ready_future_void() -> BoxFutureVoid {
-    Box::pin(std::future::ready(())).into()
+    Box::pin(async { Ok(std::future::ready(()).await) }).into()
 }
 
 use crate::ffi::CloningAction;
@@ -106,7 +106,7 @@ pub fn new_waking_future_void(
     cloning_action: CloningAction,
     waking_action: WakingAction,
 ) -> BoxFutureVoid {
-    Box::pin(WakingFuture::new(cloning_action, waking_action)).into()
+    Box::pin(async move { Ok(WakingFuture::new(cloning_action, waking_action).await) }).into()
 }
 
 struct ThreadedDelayFuture {
@@ -143,7 +143,7 @@ impl Future for ThreadedDelayFuture {
 }
 
 pub fn new_threaded_delay_future_void() -> BoxFutureVoid {
-    Box::pin(ThreadedDelayFuture::new()).into()
+    Box::pin(async { Ok(ThreadedDelayFuture::new().await) }).into()
 }
 
 pub fn new_layered_ready_future_void() -> BoxFutureFallibleVoid {
@@ -237,6 +237,7 @@ pub fn new_error_handling_future_void() -> BoxFutureVoid {
             .await
             .expect_err("should throw");
         assert!(err.what().contains("test error"));
+        Ok(())
     })
     .into()
 }
@@ -248,6 +249,7 @@ pub fn new_awaiting_future_i32() -> BoxFutureVoid {
             .await
             .expect("should not throw");
         assert_eq!(value, 123);
+        Ok(())
     })
     .into()
 }
