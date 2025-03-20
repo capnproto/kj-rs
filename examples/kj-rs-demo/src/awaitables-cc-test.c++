@@ -222,7 +222,7 @@ KJ_TEST("co_awaiting a BoxFuture<Fallible<T>> from C++ can throw") {
   []() -> kj::Promise<void> {
     kj::Maybe<kj::Exception> maybeException;
     try {
-      co_await new_errored_future_fallible_void();
+      co_await new_errored_future_void();
     } catch (...) {
       maybeException = kj::getCaughtExceptionAsKj();
     }
@@ -236,7 +236,7 @@ KJ_TEST(".awaiting a Promise<T> from Rust can produce an Err Result") {
   kj::WaitScope waitScope(loop);
 
   []() -> kj::Promise<void> {
-    co_await new_error_handling_future_void();
+    co_await new_error_handling_future_void_infallible();
   }().wait(waitScope);
 }
 
@@ -254,7 +254,7 @@ KJ_TEST("C++ can await BoxFuture<i32>") {
   kj::WaitScope waitScope(loop);
 
   []() -> kj::Promise<void> {
-    KJ_EXPECT(co_await new_ready_future_fallible_i32(123) == 123);
+    KJ_EXPECT(co_await new_ready_future_i32(123) == 123);
   }().wait(waitScope);
 }
 

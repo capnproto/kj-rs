@@ -27,9 +27,9 @@ mod ffi {
     unsafe extern "C++" {
         include!("kj-rs-demo/future-boilerplate.h");
 
+        type BoxFutureVoidInfallible = crate::BoxFutureVoidInfallible;
         type BoxFutureVoid = crate::BoxFutureVoid;
-        type BoxFutureFallibleVoid = crate::BoxFutureFallibleVoid;
-        type BoxFutureFallibleI32 = crate::BoxFutureFallibleI32;
+        type BoxFutureI32 = crate::BoxFutureI32;
     }
 
     unsafe extern "C++" {
@@ -79,22 +79,22 @@ mod ffi {
 
     // Helper functions to create BoxFutureVoids for testing purposes.
     extern "Rust" {
-        fn new_pending_future_void() -> BoxFutureVoid;
-        fn new_ready_future_void() -> BoxFutureVoid;
+        fn new_pending_future_void() -> BoxFutureVoidInfallible;
+        fn new_ready_future_void() -> BoxFutureVoidInfallible;
         fn new_waking_future_void(
             cloning_action: CloningAction,
             waking_action: WakingAction,
-        ) -> BoxFutureVoid;
-        fn new_threaded_delay_future_void() -> BoxFutureVoid;
-        fn new_layered_ready_future_void() -> BoxFutureFallibleVoid;
+        ) -> BoxFutureVoidInfallible;
+        fn new_threaded_delay_future_void() -> BoxFutureVoidInfallible;
+        fn new_layered_ready_future_void() -> BoxFutureVoid;
 
-        fn new_naive_select_future_void() -> BoxFutureFallibleVoid;
-        fn new_wrapped_waker_future_void() -> BoxFutureFallibleVoid;
+        fn new_naive_select_future_void() -> BoxFutureVoid;
+        fn new_wrapped_waker_future_void() -> BoxFutureVoid;
 
-        fn new_errored_future_fallible_void() -> BoxFutureFallibleVoid;
-        fn new_error_handling_future_void() -> BoxFutureVoid;
+        fn new_errored_future_void() -> BoxFutureVoid;
+        fn new_error_handling_future_void_infallible() -> BoxFutureVoidInfallible;
 
-        fn new_awaiting_future_i32() -> BoxFutureVoid;
-        fn new_ready_future_fallible_i32(value: i32) -> BoxFutureFallibleI32;
+        fn new_awaiting_future_i32() -> BoxFutureVoidInfallible;
+        fn new_ready_future_i32(value: i32) -> BoxFutureI32;
     }
 }

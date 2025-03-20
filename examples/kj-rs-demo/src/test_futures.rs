@@ -15,14 +15,14 @@ use std::task::Waker;
 use crate::Error;
 use crate::Result;
 
-use crate::BoxFutureFallibleI32;
-use crate::BoxFutureFallibleVoid;
+use crate::BoxFutureI32;
 use crate::BoxFutureVoid;
+use crate::BoxFutureVoidInfallible;
 
-pub fn new_pending_future_void() -> BoxFutureVoid {
+pub fn new_pending_future_void() -> BoxFutureVoidInfallible {
     Box::pin(async { Ok(std::future::pending().await) }).into()
 }
-pub fn new_ready_future_void() -> BoxFutureVoid {
+pub fn new_ready_future_void() -> BoxFutureVoidInfallible {
     Box::pin(async { Ok(std::future::ready(()).await) }).into()
 }
 
@@ -105,7 +105,7 @@ impl Future for WakingFuture {
 pub fn new_waking_future_void(
     cloning_action: CloningAction,
     waking_action: WakingAction,
-) -> BoxFutureVoid {
+) -> BoxFutureVoidInfallible {
     Box::pin(async move { Ok(WakingFuture::new(cloning_action, waking_action).await) }).into()
 }
 
@@ -142,11 +142,11 @@ impl Future for ThreadedDelayFuture {
     }
 }
 
-pub fn new_threaded_delay_future_void() -> BoxFutureVoid {
+pub fn new_threaded_delay_future_void() -> BoxFutureVoidInfallible {
     Box::pin(async { Ok(ThreadedDelayFuture::new().await) }).into()
 }
 
-pub fn new_layered_ready_future_void() -> BoxFutureFallibleVoid {
+pub fn new_layered_ready_future_void() -> BoxFutureVoid {
     Box::pin(async {
         crate::ffi::new_ready_promise_void()
             .await
@@ -179,7 +179,7 @@ fn naive_select<T>(
 }
 
 // A Future which polls multiple OwnPromiseNodes at once.
-pub fn new_naive_select_future_void() -> BoxFutureFallibleVoid {
+pub fn new_naive_select_future_void() -> BoxFutureVoid {
     Box::pin(async {
         naive_select(
             crate::ffi::new_pending_promise_void().into_future(),
@@ -208,7 +208,7 @@ impl Wake for WrappedWaker {
 }
 
 // Return a Future which awaits a KJ promise using a custom Waker implementation, opaque to KJ.
-pub fn new_wrapped_waker_future_void() -> BoxFutureFallibleVoid {
+pub fn new_wrapped_waker_future_void() -> BoxFutureVoid {
     Box::pin(async {
         let mut promise = pin!(crate::ffi::new_coroutine_promise_void().into_future());
         future::poll_fn(move |cx| {
@@ -227,11 +227,11 @@ pub fn new_wrapped_waker_future_void() -> BoxFutureFallibleVoid {
     .into()
 }
 
-pub fn new_errored_future_fallible_void() -> BoxFutureFallibleVoid {
+pub fn new_errored_future_void() -> BoxFutureVoid {
     Box::pin(std::future::ready(Err(Error::other("test error")))).into()
 }
 
-pub fn new_error_handling_future_void() -> BoxFutureVoid {
+pub fn new_error_handling_future_void_infallible() -> BoxFutureVoidInfallible {
     Box::pin(async {
         let err = crate::ffi::new_errored_promise_void()
             .await
@@ -243,7 +243,7 @@ pub fn new_error_handling_future_void() -> BoxFutureVoid {
 }
 
 // TODO(now): Rename to new_promise_i32_awaiting_future_void
-pub fn new_awaiting_future_i32() -> BoxFutureVoid {
+pub fn new_awaiting_future_i32() -> BoxFutureVoidInfallible {
     Box::pin(async {
         let value = crate::ffi::new_ready_promise_i32(123)
             .await
@@ -254,6 +254,6 @@ pub fn new_awaiting_future_i32() -> BoxFutureVoid {
     .into()
 }
 
-pub fn new_ready_future_fallible_i32(value: i32) -> BoxFutureFallibleI32 {
+pub fn new_ready_future_i32(value: i32) -> BoxFutureI32 {
     Box::pin(std::future::ready(Ok(value))).into()
 }
