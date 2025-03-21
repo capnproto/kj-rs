@@ -71,8 +71,8 @@ rust_binary(
 cxxbridge_cmd_deps = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 cxxbridge_cmd_deps.from_cargo(
     name = "cxxbridge_cmd_deps",
-    cargo_lockfile = "//:cxxbridge-cmd.Cargo.lock",
-    lockfile = "//:cxxbridge-cmd.cargo-bazel-lock.json",
+    cargo_lockfile = "//deps/rust:cxxbridge-cmd.Cargo.lock",
+    lockfile = "//deps/rust:cxxbridge-cmd.cargo-bazel-lock.json",
     manifests = ["@cxxbridge-cmd//:Cargo.toml"],
 )
 use_repo(
@@ -104,6 +104,6 @@ new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.
 # BUILD.bazel file.
 new_local_repository(
     name = "local-kj-rs",
-    build_file = "//crates_vendor:BUILD.kj-rs-0.1.0.bazel",
+    build_file = "//deps/rust/crates:BUILD.kj-rs-0.1.0.bazel",
     path = "../..",
 )
