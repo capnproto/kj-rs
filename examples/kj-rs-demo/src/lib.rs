@@ -12,13 +12,6 @@ type Error = std::io::Error;
 
 #[cxx::bridge(namespace = "kj_rs_demo")]
 mod ffi {
-    // Cross-namespace example from https://github.com/dtolnay/cxx/pull/465/files
-    #[namespace = "kj_rs"]
-    unsafe extern "C++" {
-        include!("kj-rs/waker.h");
-        type OwnPromiseNode = kj_rs::OwnPromiseNode;
-    }
-
     // -----------------------------------------------------
     // Boilerplate
 
@@ -33,16 +26,8 @@ mod ffi {
     unsafe extern "C++" {
         include!("kj-rs-demo/promise-boilerplate.h");
 
-        // TODO(now): Generate boilerplate with a macro.
         type PromiseVoid = crate::PromiseVoid;
-        fn own_promise_node_unwrap_void(node: OwnPromiseNode) -> Result<()>;
-        unsafe fn promise_drop_in_place_void(promise: *mut PromiseVoid);
-        fn promise_into_own_promise_node_void(promise: PromiseVoid) -> OwnPromiseNode;
-
         type PromiseI32 = crate::PromiseI32;
-        fn own_promise_node_unwrap_i32(node: OwnPromiseNode) -> Result<i32>;
-        unsafe fn promise_drop_in_place_i32(promise: *mut PromiseI32);
-        fn promise_into_own_promise_node_i32(promise: PromiseI32) -> OwnPromiseNode;
     }
 
     // -----------------------------------------------------

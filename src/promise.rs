@@ -13,6 +13,7 @@ type CxxResult<T> = std::result::Result<T, cxx::Exception>;
 
 // The inner pointer is never read on Rust's side, so Rust thinks it's dead code.
 #[allow(dead_code)]
+#[repr(transparent)]
 pub struct OwnPromiseNode(*const ());
 
 // Safety: KJ Promises are not associated with threads, but with event loops at construction time.
