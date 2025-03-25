@@ -57,6 +57,15 @@ unsafe impl ExternType for GuardedRustPromiseAwaiter {
     type Kind = cxx::kind::Opaque;
 }
 
+// This Ptr- type is copied from dtolnay's `Box<dyn Trait>` example:
+// https://github.com/dtolnay/cxx/pull/672/files#diff-0ca4eb15f64c7f6bd562b9efb702a1f6020ee83a6f1c686054cfd3fb314edfe1R16
+//
+// I don't entirely understand why it is necessary. When I tried to replace it with raw pointers, I
+// encountered segfaults, so I put it back.
+//
+// TODO(someday): Examine the generated code with and without this wrapper type and figure out why
+//   it's necessary. Do we need this sort of wrapper for our macro-generated Future and Promise
+//   types, too?
 #[repr(transparent)]
 pub struct PtrGuardedRustPromiseAwaiter(*mut GuardedRustPromiseAwaiter);
 
