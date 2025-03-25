@@ -1,7 +1,3 @@
-mod future;
-pub use future::BoxFuture;
-use future::PtrBoxFuture;
-
 mod promise;
 pub use promise::Promise;
 use promise::PtrPromise;
@@ -59,19 +55,19 @@ mod ffi {
         include!("kj-rs-demo/future-boilerplate.h");
 
         // TODO(now): Generate boilerplate with a macro.
-        type BoxFutureVoid = crate::BoxFuture<()>;
-        type PtrBoxFutureVoid = crate::PtrBoxFuture<()>;
+        type BoxFutureVoid = crate::BoxFutureVoid;
+        type PtrBoxFutureVoid = crate::PtrBoxFutureVoid;
         type BoxFutureFulfillerVoid;
         fn fulfill(self: Pin<&mut BoxFutureFulfillerVoid>);
 
         // TODO(now): Generate boilerplate with a macro.
-        type BoxFutureFallibleVoid = crate::BoxFuture<crate::Result<()>>;
-        type PtrBoxFutureFallibleVoid = crate::PtrBoxFuture<crate::Result<()>>;
+        type BoxFutureFallibleVoid = crate::BoxFutureFallibleVoid;
+        type PtrBoxFutureFallibleVoid = crate::PtrBoxFutureFallibleVoid;
         type BoxFutureFulfillerFallibleVoid;
         fn fulfill(self: Pin<&mut BoxFutureFulfillerFallibleVoid>);
 
-        type BoxFutureFallibleI32 = crate::BoxFuture<crate::Result<i32>>;
-        type PtrBoxFutureFallibleI32 = crate::PtrBoxFuture<crate::Result<i32>>;
+        type BoxFutureFallibleI32 = crate::BoxFutureFallibleI32;
+        type PtrBoxFutureFallibleI32 = crate::PtrBoxFutureFallibleI32;
         type BoxFutureFulfillerFallibleI32;
         fn fulfill(self: Pin<&mut BoxFutureFulfillerFallibleI32>, value: i32);
     }
