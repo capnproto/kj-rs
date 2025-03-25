@@ -9,7 +9,6 @@ mod lazy_pin_init;
 
 mod future;
 pub use future::BoxFuture;
-pub use future::PtrBoxFuture;
 
 mod promise;
 pub use promise::OwnPromiseNode;

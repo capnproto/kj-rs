@@ -153,8 +153,7 @@ Note that `box_future_poll_fallible_T()` still also accepts a type alias to a `B
 Futures require the following boilerplate in C++:
 
 - A type alias of `BoxFuture<T>`, e.g. `BoxFutureI32`.
-- An explicit specialization of `box_future_drop_in_place<T>(PtrBoxFuture<T>)`, which forwards to the Rust boilerplate function `box_future_drop_in_place_T()`.
-- A type alias of `PtrBoxFuture<T>`, which is in turn an alias of `BoxFuture<T>*`.
+- An explicit specialization of `box_future_drop_in_place<T>(BoxFuture<T>*)`, which forwards to the Rust boilerplate function `box_future_drop_in_place_T()`.
 - An explicit specialization of `box_future_poll<T>(BoxFuture<T>&, const KjWaker&, BoxFutureFulfiller<T>&)`, which forwards to the Rust boilerplate function `box_future_poll_T()`.
 - A type alias of `BoxFutureFulfiller<T>`, with one member function `fulfill()`, accepting either nothing (if `T = void`) or a value of type `T`.
 
@@ -162,9 +161,9 @@ Futures additionally require the following boilerplate in Rust:
 
 - Type aliases matching the boilerplate C++ type aliases inside of our cxxbridge `ffi` module.
 - A declaration for the `BoxFutureFulfiller<T>::fulfill()` member function inside of our cxxbridge `ffi` module.
-- A `box_future_drop_in_place_T(PtrBoxFuture<T>)` function to run the Future's Drop trait.
+- A `box_future_drop_in_place_T(*mut BoxFuture<T>)` function to run the Future's Drop trait.
 - A `box_future_poll_T(Pin<&mut BoxFuture<T>>, &KjWaker, Pin<&mut BoxFutureFulfiller<T>)` function to poll the Future.
-- `cxx::ExternType` trait implementations for `BoxFuture<T>` and `PtrBoxFuture<T>`.
+- A `cxx::ExternType` trait implementation for `BoxFuture<T>`.
 
 ## `Promise<T>` in detail
 

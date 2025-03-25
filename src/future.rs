@@ -34,12 +34,3 @@ impl<T, F: Future<Output = T> + Send + 'static> From<Pin<Box<F>>> for BoxFuture<
         BoxFuture(value)
     }
 }
-
-#[repr(transparent)]
-pub struct PtrBoxFuture<T>(*mut BoxFuture<T>);
-
-impl<T> PtrBoxFuture<T> {
-    pub unsafe fn drop_in_place(self) {
-        std::ptr::drop_in_place(self.0);
-    }
-}

@@ -83,10 +83,6 @@ kj_rs::LazyFutureAwaiter<BoxFuture<T>> operator co_await(BoxFuture<T>&& future) 
 
 using BoxFutureVoid = BoxFuture<void>;
 
-// We define this pointer typedef so that cxx-rs can associate it with the same pointer type our
-// drop function uses.
-using PtrBoxFutureVoid = BoxFutureVoid*;
-
 using BoxFutureFulfillerVoid = BoxFutureFulfiller<void>;
 
 extern "C" void box_future_drop_in_place_void(kj_rs_demo::BoxFutureVoid* ptr) noexcept;
@@ -95,10 +91,6 @@ extern "C" void box_future_drop_in_place_void(kj_rs_demo::BoxFutureVoid* ptr) no
 
 using BoxFutureFallibleVoid = BoxFuture<Fallible<void>>;
 
-// We define this the pointer typedef so that cxx-rs can associate it with the same pointer type our
-// drop function uses.
-using PtrBoxFutureFallibleVoid = BoxFutureFallibleVoid*;
-
 using BoxFutureFulfillerFallibleVoid = BoxFutureFulfiller<Fallible<void>>;
 
 extern "C" void box_future_drop_in_place_fallible_void(kj_rs_demo::BoxFutureFallibleVoid* ptr) noexcept;
@@ -106,10 +98,6 @@ extern "C" void box_future_drop_in_place_fallible_void(kj_rs_demo::BoxFutureFall
 // ---------------------------------------------------------
 
 using BoxFutureFallibleI32 = BoxFuture<Fallible<int32_t>>;
-
-// We define this pointer typedef so that cxx-rs can associate it with the same pointer type our
-// drop function uses.
-using PtrBoxFutureFallibleI32 = BoxFutureFallibleI32*;
 
 using BoxFutureFulfillerFallibleI32 = BoxFutureFulfiller<Fallible<int32_t>>;
 
