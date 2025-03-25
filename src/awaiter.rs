@@ -1,10 +1,6 @@
-use std::future::Future;
-use std::future::IntoFuture;
-
 use std::pin::Pin;
 
 use std::task::Context;
-use std::task::Poll;
 
 use cxx::ExternType;
 
