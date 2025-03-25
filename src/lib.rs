@@ -13,8 +13,6 @@ pub use promise::PtrOwnPromiseNode;
 
 mod waker;
 
-pub type CxxResult<T> = std::result::Result<T, cxx::Exception>;
-
 pub type Result<T> = std::io::Result<T>;
 pub type Error = std::io::Error;
 

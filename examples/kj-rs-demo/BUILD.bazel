@@ -1,0 +1,96 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_rust//rust:defs.bzl", "rust_library")
+load("//:build/rust_cxx_bridge.bzl", "rust_cxx_bridge")
+
+# https://bazel.build/configure/windows#clang
+platform(
+    name = "x64_windows-clang-cl",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+        "@bazel_tools//tools/cpp:clang-cl",
+    ],
+)
+
+# These two convenience aliases allow you to switch between building this Bazel package using the
+# local copy of kj-rs, or a remote-vendored one.
+
+alias(
+    name = "kj-rs",
+    actual = "@local-kj-rs//:kj_rs",
+    # actual = "@crates_vendor//:kj-rs",
+)
+
+alias(
+    name = "kj-rs-headers",
+    actual = "@local-kj-rs//:kj-rs-headers",
+    # actual = "@crates_vendor//:kj-rs-headers",
+)
+
+rust_library(
+    name = "awaitables-rust",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2021",
+    deps = [
+        ":rust-bridge",
+        # TODO(now): Why isn't :cxx transitive?
+        "@crates_vendor//:cxx",
+        ":kj-rs",
+    ],
+)
+
+rust_cxx_bridge(
+    name = "rust-bridge",
+    src = "src/lib.rs",
+    include_prefix = "kj-rs-demo",
+    deps = [
+        ":awaitables-include",
+    ],
+)
+
+cc_library(
+    name = "awaitables-include",
+    hdrs = [
+        "src/future-boilerplate.h",
+        "src/promise-boilerplate.h",
+        "src/test-promises.h",
+    ],
+    include_prefix = "kj-rs-demo",
+    strip_include_prefix = "src",
+    deps = [
+        ":kj-rs-headers",
+        "@capnp-cpp//src/kj:kj",
+        "@capnp-cpp//src/kj:kj-async",
+        "@crates_vendor//:cxx_cc",
+    ],
+)
+
+cc_library(
+    name = "awaitables-cc",
+    srcs = [
+        "src/future-boilerplate.c++",
+        "src/promise-boilerplate.c++",
+        "src/test-promises.c++",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":awaitables-include",
+        ":kj-rs",
+        ":rust-bridge",
+        ":rust-bridge/include",
+    ],
+)
+
+cc_test(
+    name = "awaitables-cc-test",
+    size = "medium",
+    srcs = [
+        "src/awaitables-cc-test.c++",
+    ],
+    deps = [
+        ":awaitables-cc",
+        ":awaitables-rust",
+        ":rust-bridge/include",
+        "@capnp-cpp//src/kj:kj-test",
+    ],
+)
