@@ -15,7 +15,7 @@ class BoxFuture;
 
 // Function templates which are explicitly specialized for each instance of BoxFuture<T>.
 template <typename T>
-void box_future_drop_in_place(BoxFuture<T>* self);
+void box_future_drop_in_place(BoxFuture<T>* self) noexcept;
 template <typename T>
 bool box_future_poll(BoxFuture<T>& self, const kj_rs::KjWaker& waker, kj_rs::BoxFutureFulfiller<T>&);
 
@@ -89,6 +89,8 @@ using PtrBoxFutureVoid = BoxFutureVoid*;
 
 using BoxFutureFulfillerVoid = BoxFutureFulfiller<void>;
 
+extern "C" void box_future_drop_in_place_void(kj_rs_demo::BoxFutureVoid* ptr) noexcept;
+
 // ---------------------------------------------------------
 
 using BoxFutureFallibleVoid = BoxFuture<Fallible<void>>;
@@ -99,6 +101,8 @@ using PtrBoxFutureFallibleVoid = BoxFutureFallibleVoid*;
 
 using BoxFutureFulfillerFallibleVoid = BoxFutureFulfiller<Fallible<void>>;
 
+extern "C" void box_future_drop_in_place_fallible_void(kj_rs_demo::BoxFutureFallibleVoid* ptr) noexcept;
+
 // ---------------------------------------------------------
 
 using BoxFutureFallibleI32 = BoxFuture<Fallible<int32_t>>;
@@ -108,5 +112,7 @@ using BoxFutureFallibleI32 = BoxFuture<Fallible<int32_t>>;
 using PtrBoxFutureFallibleI32 = BoxFutureFallibleI32*;
 
 using BoxFutureFulfillerFallibleI32 = BoxFutureFulfiller<Fallible<int32_t>>;
+
+extern "C" void box_future_drop_in_place_fallible_i32(kj_rs_demo::BoxFutureFallibleI32* ptr) noexcept;
 
 }  // namespace kj_rs_demo

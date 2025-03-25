@@ -4,7 +4,7 @@
 namespace kj_rs_demo {
 
 template <>
-void box_future_drop_in_place(BoxFuture<void>* self) {
+void box_future_drop_in_place(BoxFuture<void>* self) noexcept {
   box_future_drop_in_place_void(self);
 }
 template <>
@@ -15,7 +15,7 @@ bool box_future_poll(BoxFuture<void>& self, const kj_rs::KjWaker& waker, kj_rs::
 // ---------------------------------------------------------
 
 template <>
-void box_future_drop_in_place(BoxFuture<Fallible<void>>* self) {
+void box_future_drop_in_place(BoxFuture<Fallible<void>>* self) noexcept {
   box_future_drop_in_place_fallible_void(self);
 }
 template <>
@@ -26,7 +26,7 @@ bool box_future_poll(BoxFuture<Fallible<void>>& self, const kj_rs::KjWaker& wake
 // ---------------------------------------------------------
 
 template <>
-void box_future_drop_in_place(BoxFuture<Fallible<int32_t>>* self) {
+void box_future_drop_in_place(BoxFuture<Fallible<int32_t>>* self) noexcept {
   box_future_drop_in_place_fallible_i32(self);
 }
 template <>
