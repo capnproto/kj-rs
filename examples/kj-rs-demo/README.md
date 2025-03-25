@@ -1,6 +1,6 @@
-# Bazel Example
+# Basic Example
 
-This directory contains a Bazel project which builds a C++ test binary which exercises kj-rs.
+This directory contains an example which exercises kj-rs. Both Bazel and Cargo build systems are demonstrated.
 
 ## Dependencies
 

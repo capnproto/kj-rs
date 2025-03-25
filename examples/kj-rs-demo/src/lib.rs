@@ -19,7 +19,7 @@ type CxxResult<T> = std::result::Result<T, cxx::Exception>;
 type Result<T> = std::io::Result<T>;
 type Error = std::io::Error;
 
-#[cxx::bridge(namespace = "kj_rs::tests")]
+#[cxx::bridge(namespace = "kj_rs_demo")]
 mod ffi {
     // Cross-namespace example from https://github.com/dtolnay/cxx/pull/465/files
     #[namespace = "kj_rs"]
@@ -58,7 +58,7 @@ mod ffi {
     }
 
     unsafe extern "C++" {
-        include!("kj-rs/tests/future-boilerplate.h");
+        include!("kj-rs-demo/future-boilerplate.h");
 
         // TODO(now): Generate boilerplate with a macro.
         type BoxFutureVoid = crate::BoxFuture<()>;
@@ -79,7 +79,7 @@ mod ffi {
     }
 
     unsafe extern "C++" {
-        include!("kj-rs/tests/promise-boilerplate.h");
+        include!("kj-rs-demo/promise-boilerplate.h");
 
         // TODO(now): Generate boilerplate with a macro.
         type PromiseVoid = crate::Promise<()>;
@@ -100,7 +100,7 @@ mod ffi {
 
     // Helper functions to create Promises for testing purposes.
     unsafe extern "C++" {
-        include!("kj-rs/tests/test-promises.h");
+        include!("kj-rs-demo/test-promises.h");
 
         fn new_ready_promise_void() -> PromiseVoid;
         fn new_pending_promise_void() -> PromiseVoid;

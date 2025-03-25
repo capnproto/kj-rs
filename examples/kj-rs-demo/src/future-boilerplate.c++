@@ -1,7 +1,7 @@
-#include <kj-rs/tests/src/lib.rs.h>
+#include <kj-rs-demo/src/lib.rs.h>
 #include <kj-rs/future.h>
 
-namespace kj_rs::tests {
+namespace kj_rs_demo {
 
 template <>
 void box_future_drop_in_place(BoxFuture<void>* self) {
@@ -37,4 +37,4 @@ bool box_future_poll(
   return box_future_poll_fallible_i32(self, waker, fulfiller);
 }
 
-}  // namespace kj_rs::tests
+}  // namespace kj_rs_demo

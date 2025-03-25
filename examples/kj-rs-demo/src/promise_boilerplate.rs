@@ -10,13 +10,13 @@ use kj_rs::OwnPromiseNode;
 
 // TODO(now): Safety comment.
 unsafe impl cxx::ExternType for Promise<()> {
-    type Id = cxx::type_id!("::kj_rs::tests::PromiseVoid");
+    type Id = cxx::type_id!("::kj_rs_demo::PromiseVoid");
     type Kind = cxx::kind::Trivial;
 }
 
 // Safety: Raw pointers are the same size in both languages.
 unsafe impl cxx::ExternType for PtrPromise<()> {
-    type Id = cxx::type_id!("::kj_rs::tests::PtrPromiseVoid");
+    type Id = cxx::type_id!("::kj_rs_demo::PtrPromiseVoid");
     type Kind = cxx::kind::Trivial;
 }
 
@@ -36,13 +36,13 @@ impl PromiseTarget for () {
 
 // TODO(now): Safety comment.
 unsafe impl cxx::ExternType for Promise<i32> {
-    type Id = cxx::type_id!("::kj_rs::tests::PromiseI32");
+    type Id = cxx::type_id!("::kj_rs_demo::PromiseI32");
     type Kind = cxx::kind::Trivial;
 }
 
 // Safety: Raw pointers are the same size in both languages.
 unsafe impl cxx::ExternType for PtrPromise<i32> {
-    type Id = cxx::type_id!("::kj_rs::tests::PtrPromiseI32");
+    type Id = cxx::type_id!("::kj_rs_demo::PtrPromiseI32");
     type Kind = cxx::kind::Trivial;
 }
 

@@ -1,8 +1,8 @@
-#include <kj-rs/tests/test-promises.h>
+#include <kj-rs-demo/test-promises.h>
 
 #include <kj/debug.h>
 
-namespace kj_rs::tests {
+namespace kj_rs_demo {
 
 kj::Promise<void> new_ready_promise_void() {
   return kj::Promise<void>(kj::READY_NOW);
@@ -28,4 +28,4 @@ kj::Promise<void> new_errored_promise_void() {
   return KJ_EXCEPTION(FAILED, "test error");
 }
 
-}  // namespace kj_rs::tests
+}  // namespace kj_rs_demo

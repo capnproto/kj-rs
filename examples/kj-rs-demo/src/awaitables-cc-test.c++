@@ -1,4 +1,7 @@
-#include <kj-rs/tests/src/lib.rs.h>
+// TODO(now): Make this a library, drive test from Rust.
+// TODO(now): Move as many cases as possible into kj-rs.
+
+#include <kj-rs-demo/src/lib.rs.h>
 
 #include <kj-rs/awaiter.h>
 #include <kj-rs/future.h>
@@ -6,7 +9,7 @@
 
 #include <kj/test.h>
 
-namespace kj_rs::tests {
+namespace kj_rs_demo {
 namespace {
 
 KJ_TEST("LazyArcWaker: C++ can poll() Rust Futures") {
@@ -261,4 +264,4 @@ KJ_TEST("C++ can await BoxFuture<i32>") {
 //   - Throwing an exception from PromiseNode functions, including destructor.
 
 }  // namespace
-}  // namespace kj_rs::tests
+}  // namespace kj_rs_demo

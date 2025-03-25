@@ -2,7 +2,7 @@
 
 #include <array>
 
-namespace kj_rs::tests {
+namespace kj_rs_demo {
 
 using kj_rs::BoxFutureFulfiller;
 using kj_rs::Fallible;
@@ -109,4 +109,4 @@ using PtrBoxFutureFallibleI32 = BoxFutureFallibleI32*;
 
 using BoxFutureFulfillerFallibleI32 = BoxFutureFulfiller<Fallible<int32_t>>;
 
-}  // namespace kj_rs::tests
+}  // namespace kj_rs_demo

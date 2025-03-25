@@ -1,6 +1,6 @@
 module(
-    name = "kj-rs-examples-bazel",
-    repo_name = "kj-rs-examples-bazel",
+    name = "kj-rs-demo",
+    repo_name = "kj-rs-demo",
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.7.1")

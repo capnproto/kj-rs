@@ -43,8 +43,8 @@ crates_vendor(
                     "@capnp-cpp//src/kj:kj",
                     "@capnp-cpp//src/kj:kj-async",
                     # Expose our @capnp-cpp KJ headers to the cargo build script.
-                    "@kj-rs-examples-bazel//:kj-headers",
-                    "@kj-rs-examples-bazel//:kj-async-headers",
+                    "@kj-rs-demo//:kj-headers",
+                    "@kj-rs-demo//:kj-async-headers",
                 ],
                 build_script_env = {
                     # HACK: CXXFLAGS on my machine gets set to something with `-std=c++17`. I can't
@@ -125,7 +125,7 @@ rust_library(
 rust_cxx_bridge(
     name = "rust-bridge",
     src = "src/lib.rs",
-    include_prefix = "kj-rs/tests",
+    include_prefix = "kj-rs-demo",
     deps = [
         ":awaitables-include",
     ],
@@ -138,7 +138,7 @@ cc_library(
         "src/promise-boilerplate.h",
         "src/test-promises.h",
     ],
-    include_prefix = "kj-rs/tests",
+    include_prefix = "kj-rs-demo",
     strip_include_prefix = "src",
     deps = [
         ":kj-rs-headers",

@@ -132,8 +132,8 @@ cargo_build_script(
     ) + [
         "@capnp-cpp//src/kj:kj",
         "@capnp-cpp//src/kj:kj-async",
-        "@kj-rs-examples-bazel//:kj-async-headers",
-        "@kj-rs-examples-bazel//:kj-headers",
+        "@kj-rs-demo//:kj-async-headers",
+        "@kj-rs-demo//:kj-headers",
     ],
     edition = "2021",
     link_deps = [

@@ -1,6 +1,6 @@
-#include <kj-rs/tests/promise-boilerplate.h>
+#include <kj-rs-demo/promise-boilerplate.h>
 
-namespace kj_rs::tests {
+namespace kj_rs_demo {
 
 namespace {
 
@@ -41,4 +41,4 @@ int32_t own_promise_node_unwrap_i32(OwnPromiseNode node) {
   return unwrapNode<int32_t>(kj::mv(node));
 }
 
-}  // namespace kj_rs::tests
+}  // namespace kj_rs_demo

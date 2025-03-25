@@ -28,13 +28,13 @@ use crate::PtrBoxFuture;
 // https://doc.rust-lang.org/std/keyword.dyn.html
 // - "As such, a dyn Trait reference contains two pointers."
 unsafe impl ExternType for BoxFuture<()> {
-    type Id = cxx::type_id!("kj_rs::tests::BoxFutureVoid");
+    type Id = cxx::type_id!("kj_rs_demo::BoxFutureVoid");
     type Kind = cxx::kind::Trivial;
 }
 
 // Safety: Raw pointers are the same size in both languages.
 unsafe impl ExternType for PtrBoxFuture<()> {
-    type Id = cxx::type_id!("kj_rs::tests::PtrBoxFutureVoid");
+    type Id = cxx::type_id!("kj_rs_demo::PtrBoxFutureVoid");
     type Kind = cxx::kind::Trivial;
 }
 
@@ -68,13 +68,13 @@ pub unsafe fn box_future_drop_in_place_void(ptr: PtrBoxFuture<()>) {
 // https://doc.rust-lang.org/std/keyword.dyn.html
 // - "As such, a dyn Trait reference contains two pointers."
 unsafe impl ExternType for BoxFuture<Result<()>> {
-    type Id = cxx::type_id!("kj_rs::tests::BoxFutureFallibleVoid");
+    type Id = cxx::type_id!("kj_rs_demo::BoxFutureFallibleVoid");
     type Kind = cxx::kind::Trivial;
 }
 
 // Safety: Raw pointers are the same size in both languages.
 unsafe impl ExternType for PtrBoxFuture<Result<()>> {
-    type Id = cxx::type_id!("kj_rs::tests::PtrBoxFutureFallibleVoid");
+    type Id = cxx::type_id!("kj_rs_demo::PtrBoxFutureFallibleVoid");
     type Kind = cxx::kind::Trivial;
 }
 
@@ -102,13 +102,13 @@ pub unsafe fn box_future_drop_in_place_fallible_void(ptr: PtrBoxFuture<Result<()
 // ---------------------------------------------------------
 
 unsafe impl ExternType for BoxFuture<Result<i32>> {
-    type Id = cxx::type_id!("kj_rs::tests::BoxFutureFallibleI32");
+    type Id = cxx::type_id!("kj_rs_demo::BoxFutureFallibleI32");
     type Kind = cxx::kind::Trivial;
 }
 
 // Safety: Raw pointers are the same size in both languages.
 unsafe impl ExternType for PtrBoxFuture<Result<i32>> {
-    type Id = cxx::type_id!("kj_rs::tests::PtrBoxFutureFallibleI32");
+    type Id = cxx::type_id!("kj_rs_demo::PtrBoxFutureFallibleI32");
     type Kind = cxx::kind::Trivial;
 }
 

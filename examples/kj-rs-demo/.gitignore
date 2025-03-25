@@ -1,4 +1,4 @@
 bazel-bin
-bazel-bazel
+bazel-kj-rs-demo
 bazel-out
 bazel-testlogs
