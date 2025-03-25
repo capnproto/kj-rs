@@ -12,8 +12,6 @@ use crate::waker::try_into_kj_waker_ptr;
 
 use crate::lazy_pin_init::LazyPinInit;
 
-use crate::CxxResult;
-
 // =======================================================================================
 // GuardedRustPromiseAwaiter
 

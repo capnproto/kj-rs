@@ -14,8 +14,6 @@ mod promise_boilerplate;
 mod test_futures;
 use test_futures::*;
 
-type CxxResult<T> = std::result::Result<T, cxx::Exception>;
-
 type Result<T> = std::io::Result<T>;
 type Error = std::io::Error;
 

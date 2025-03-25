@@ -1,6 +1,6 @@
 use cxx::ExternType;
 
-use crate::CxxResult;
+type CxxResult<T> = std::result::Result<T, cxx::Exception>;
 
 // The inner pointer is never read on Rust's side, so Rust thinks it's dead code.
 #[allow(dead_code)]

@@ -1,6 +1,6 @@
 // This file contains boilerplate which must occur once per crate, rather than once per type.
 
-use kj_rs::CxxResult;
+type CxxResult<T> = std::result::Result<T, cxx::Exception>;
 use kj_rs::OwnPromiseNode;
 use std::marker::PhantomData;
 
