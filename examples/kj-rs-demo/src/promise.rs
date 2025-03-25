@@ -12,7 +12,7 @@ use std::task::Poll;
 
 pub trait PromiseTarget: Sized {
     fn into_own_promise_node(this: Promise<Self>) -> OwnPromiseNode;
-    unsafe fn drop_in_place(this: PtrPromise<Self>);
+    unsafe fn drop_in_place(this: *mut Promise<Self>);
     fn unwrap(node: OwnPromiseNode) -> CxxResult<Self>;
 }
 
@@ -26,13 +26,10 @@ impl<T: PromiseTarget> Drop for Promise<T> {
     fn drop(&mut self) {
         // TODO(now): Safety comment.
         unsafe {
-            T::drop_in_place(PtrPromise(self));
+            T::drop_in_place(self);
         }
     }
 }
-
-#[repr(transparent)]
-pub struct PtrPromise<T: PromiseTarget>(*mut Promise<T>);
 
 impl<T: PromiseTarget> IntoFuture for Promise<T> {
     type IntoFuture = PromiseFuture<T>;

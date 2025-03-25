@@ -232,8 +232,7 @@ Unlike Rust Futures, which have fallibility baked into their types, all Promises
 Promises require the following C++ boilerplate:
 
 - The `Promise<T>` type alias, e.g. `PromiseI32`.
-- A `promise_drop_in_place_T(PtrPromise<T>)` function which runs `Promise<T>`'s destructor.
-- A type alias for `PtrPromise<T>`, which is in turn an alias for `Promise<T>*`.
+- A `promise_drop_in_place_T(Promise<T>*)` function which runs `Promise<T>`'s destructor.
 - A `promise_into_own_promise_node_T(Promise<T>) -> OwnPromiseNode` function to extract the PromiseNode from a type-specific Promise for awaiting.
 - An `own_promise_node_unwrap_T(OwnPromiseNode)` function to extract a value T from the awaited OwnPromiseNode.
 
@@ -241,7 +240,7 @@ Promises additionally require the following Rust boilerplate:
 
 - Definitions matching all of the C++ boilerplate inside of our cxxbridge `ffi` module.
 - A `PromiseTarget` trait implementation for `T`. The `PromiseTarget` trait consists of three functions which forward to the three C++ boilerplate functions associated with `Promise<T>`.
-- `cxx::ExternType` trait implementations for `Promise<T>` and `PtrPromise<T>`.
+- A `cxx::ExternType` trait implementation for `Promise<T>`.
 
 # TODO
 

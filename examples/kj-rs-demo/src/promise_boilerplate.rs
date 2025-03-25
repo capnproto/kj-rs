@@ -1,6 +1,5 @@
 use crate::promise::PromiseTarget;
 use crate::Promise;
-use crate::PtrPromise;
 use kj_rs::OwnPromiseNode;
 
 // =======================================================================================
@@ -14,17 +13,11 @@ unsafe impl cxx::ExternType for Promise<()> {
     type Kind = cxx::kind::Trivial;
 }
 
-// Safety: Raw pointers are the same size in both languages.
-unsafe impl cxx::ExternType for PtrPromise<()> {
-    type Id = cxx::type_id!("::kj_rs_demo::PtrPromiseVoid");
-    type Kind = cxx::kind::Trivial;
-}
-
 impl PromiseTarget for () {
     fn into_own_promise_node(promise: Promise<Self>) -> OwnPromiseNode {
         crate::ffi::promise_into_own_promise_node_void(promise)
     }
-    unsafe fn drop_in_place(ptr: PtrPromise<Self>) {
+    unsafe fn drop_in_place(ptr: *mut Promise<Self>) {
         crate::ffi::promise_drop_in_place_void(ptr);
     }
     fn unwrap(node: OwnPromiseNode) -> std::result::Result<Self, cxx::Exception> {
@@ -40,17 +33,11 @@ unsafe impl cxx::ExternType for Promise<i32> {
     type Kind = cxx::kind::Trivial;
 }
 
-// Safety: Raw pointers are the same size in both languages.
-unsafe impl cxx::ExternType for PtrPromise<i32> {
-    type Id = cxx::type_id!("::kj_rs_demo::PtrPromiseI32");
-    type Kind = cxx::kind::Trivial;
-}
-
 impl PromiseTarget for i32 {
     fn into_own_promise_node(promise: Promise<Self>) -> OwnPromiseNode {
         crate::ffi::promise_into_own_promise_node_i32(promise)
     }
-    unsafe fn drop_in_place(ptr: PtrPromise<Self>) {
+    unsafe fn drop_in_place(ptr: *mut Promise<Self>) {
         crate::ffi::promise_drop_in_place_i32(ptr);
     }
     fn unwrap(node: OwnPromiseNode) -> std::result::Result<Self, cxx::Exception> {
