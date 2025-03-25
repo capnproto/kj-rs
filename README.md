@@ -35,11 +35,11 @@ We also implement each language's await syntax for each generic type. In C++, `B
 cxx-rs does not currently support exposing arbitrary generic types across languages. This forces us to define type aliases, in both languages, for each concrete `BoxFuture<T>` and `Promise<T>` we want to share. For example:
 
 ```cpp
-using BoxFutureFallibleI32 = BoxFuture<Fallible<int32_t>>;
+using BoxFutureI32 = BoxFuture<Fallible<int32_t>>;
 using PromiseI32 = kj::Promise<int32_t>
 ```
 ```rust
-type BoxFutureFallibleI32 = crate::BoxFuture<crate::Result<i32>>;
+type BoxFutureI32 = crate::BoxFuture<crate::Result<i32>>;
 type PromiseI32 = crate::Promise<i32>;
 ```
 
@@ -49,7 +49,7 @@ Boilerplate code currently lives in three locations: certain blocks within the `
 
 Currently, all the boilerplate is handwritten. This sucks, and needs to be improved. Likely the way to do this is with a proc macro in Rust, and a preprocessor macro in C++.
 
-Once all the required boilerplate code is defined for a new Future type, such as `BoxFutureFallibleI32`, you can return one from Rust to C++ and `co_await` it from a KJ coroutine. Similarly, once all the required boilerplate code is defined for a new Promise type, such as `PromiseI32`, you can return one from C++ to Rust, and `.await` it from an `async` code block, _as long as the `async` block (Future) is being driven by the KJ runtime_. In practical terms, this means that Rust can currently await KJ Promises only in code that is itself awaited by a KJ coroutine.
+Once all the required boilerplate code is defined for a new Future type, such as `BoxFutureI32`, you can return one from Rust to C++ and `co_await` it from a KJ coroutine. Similarly, once all the required boilerplate code is defined for a new Promise type, such as `PromiseI32`, you can return one from C++ to Rust, and `.await` it from an `async` code block, _as long as the `async` block (Future) is being driven by the KJ runtime_. In practical terms, this means that Rust can currently await KJ Promises only in code that is itself awaited by a KJ coroutine.
 
 ## `BoxFuture<T>` in detail
 
@@ -75,7 +75,7 @@ The cxx-rs crate does not support exposing `Box<dyn Trait>` types directly to C+
 
 In C++, we define a `BoxFuture<T>` class template with the same size and alignment as the identically-named generic tuple struct in Rust. Specifically, it contains two 64-bit words to match Rust's "fat pointer" layout: one pointer for the object, one for its vtable.
 
-Owning an object in C++ means being able to destroy it. In Rust, this means running the Drop trait. Therefore, we need a way to run the Drop trait from C++. To do so, we define a `box_future_drop_in_place<T>()` function template in C++, and specialize it in boilerplate code for every `T` in `BoxFuture<T>` we want to support. The specializations of this function template in turn call `T`-specific boilerplate functions defined in Rust, with names like `box_future_drop_in_place_void()`, and exposed via our cxxbridge FFI module. Those functions in turn call the Future's Drop trait.
+Owning an object in C++ means being able to destroy it. In Rust, this means running the Drop trait. Therefore, we need a way to run the Drop trait from C++. To do so, we define a `box_future_drop_in_place<T>()` function template in C++, and specialize it in boilerplate code for every `T` in `BoxFuture<T>` we want to support. The specializations of this function template in turn call `T`-specific boilerplate functions defined in Rust, with names like `BoxFutureVoidInfallible_drop_in_place()`, and exposed via our cxxbridge FFI module. Those functions in turn call the Future's Drop trait.
 
 ### Move semantics
 
@@ -153,8 +153,7 @@ Note that `box_future_poll_fallible_T()` still also accepts a type alias to a `B
 Futures require the following boilerplate in C++:
 
 - A type alias of `BoxFuture<T>`, e.g. `BoxFutureI32`.
-- An explicit specialization of `box_future_drop_in_place<T>(PtrBoxFuture<T>)`, which forwards to the Rust boilerplate function `box_future_drop_in_place_T()`.
-- A type alias of `PtrBoxFuture<T>`, which is in turn an alias of `BoxFuture<T>*`.
+- An explicit specialization of `box_future_drop_in_place<T>(BoxFuture<T>*)`, which forwards to the Rust boilerplate function `box_future_drop_in_place_T()`.
 - An explicit specialization of `box_future_poll<T>(BoxFuture<T>&, const KjWaker&, BoxFutureFulfiller<T>&)`, which forwards to the Rust boilerplate function `box_future_poll_T()`.
 - A type alias of `BoxFutureFulfiller<T>`, with one member function `fulfill()`, accepting either nothing (if `T = void`) or a value of type `T`.
 
@@ -162,9 +161,9 @@ Futures additionally require the following boilerplate in Rust:
 
 - Type aliases matching the boilerplate C++ type aliases inside of our cxxbridge `ffi` module.
 - A declaration for the `BoxFutureFulfiller<T>::fulfill()` member function inside of our cxxbridge `ffi` module.
-- A `box_future_drop_in_place_T(PtrBoxFuture<T>)` function to run the Future's Drop trait.
+- A `box_future_drop_in_place_T(*mut BoxFuture<T>)` function to run the Future's Drop trait.
 - A `box_future_poll_T(Pin<&mut BoxFuture<T>>, &KjWaker, Pin<&mut BoxFutureFulfiller<T>)` function to poll the Future.
-- `cxx::ExternType` trait implementations for `BoxFuture<T>` and `PtrBoxFuture<T>`.
+- A `cxx::ExternType` trait implementation for `BoxFuture<T>`.
 
 ## `Promise<T>` in detail
 
@@ -233,8 +232,7 @@ Unlike Rust Futures, which have fallibility baked into their types, all Promises
 Promises require the following C++ boilerplate:
 
 - The `Promise<T>` type alias, e.g. `PromiseI32`.
-- A `promise_drop_in_place_T(PtrPromise<T>)` function which runs `Promise<T>`'s destructor.
-- A type alias for `PtrPromise<T>`, which is in turn an alias for `Promise<T>*`.
+- A `promise_drop_in_place_T(Promise<T>*)` function which runs `Promise<T>`'s destructor.
 - A `promise_into_own_promise_node_T(Promise<T>) -> OwnPromiseNode` function to extract the PromiseNode from a type-specific Promise for awaiting.
 - An `own_promise_node_unwrap_T(OwnPromiseNode)` function to extract a value T from the awaited OwnPromiseNode.
 
@@ -242,7 +240,7 @@ Promises additionally require the following Rust boilerplate:
 
 - Definitions matching all of the C++ boilerplate inside of our cxxbridge `ffi` module.
 - A `PromiseTarget` trait implementation for `T`. The `PromiseTarget` trait consists of three functions which forward to the three C++ boilerplate functions associated with `Promise<T>`.
-- `cxx::ExternType` trait implementations for `Promise<T>` and `PtrPromise<T>`.
+- A `cxx::ExternType` trait implementation for `Promise<T>`.
 
 # TODO
 

@@ -32,6 +32,8 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 """
+# TODO(now): Figure out how to rebuild the package if any .c++ files change.
+# TODO(someday): Figure out what we need to do to expose the generated lib.rs.h header as a label.
 # TODO(someday): This `deps` default just gets overridden, because the embedder needs to wire up a
 #   dependency on KJ itself.
 deps = [":kj-rs-headers"]

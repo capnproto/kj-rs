@@ -7,9 +7,15 @@ use awaiter::WakerRef;
 
 mod lazy_pin_init;
 
+mod future;
+pub use future::box_future_poll;
+pub use future::BoxFuture;
+pub use future::FuturePollStatus;
+
 mod promise;
+pub use promise::KjPromise;
 pub use promise::OwnPromiseNode;
-pub use promise::PtrOwnPromiseNode;
+pub use promise::PromiseFuture;
 
 mod waker;
 
@@ -52,9 +58,8 @@ mod ffi {
         include!("kj-rs/promise.h");
 
         type OwnPromiseNode = crate::OwnPromiseNode;
-        type PtrOwnPromiseNode = crate::PtrOwnPromiseNode;
 
-        unsafe fn own_promise_node_drop_in_place(node: PtrOwnPromiseNode);
+        unsafe fn own_promise_node_drop_in_place(node: *mut OwnPromiseNode);
     }
 
     unsafe extern "C++" {
