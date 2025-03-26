@@ -1,17 +1,16 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under both the MIT license found in the
- * LICENSE-MIT file in the root directory of this source tree and the Apache
- * License, Version 2.0 found in the LICENSE-APACHE file in the root directory
- * of this source tree.
- */
-
-// cxx-async/macro/src/lib.rs
+// This file was originally based on cxx-async/macro/src/lib.rs from the `cxx-async` crate, which
+// is subject to the following copyright:
 //
-//! The definition of the `#[bridge]` macro.
-//!
-//! Don't depend on this crate directly; just use the reexported macro in `cxx-async`.
+// Copyright (c) Meta Platforms, Inc. and affiliates.
+//
+// https://github.com/pcwalton/cxx-async
+//
+// The `cxx-async` crate is dual-licensed under both the MIT and Apache 2.0 licenses. You will find
+// a copy of one of those licenses in the file named LICENSE in this repository's root directory.
+//
+// Subsequent changes are subject to the following copyright:
+//
+// Copyright (c) 2025 Cloudflare, Inc.
 
 use proc_macro::TokenStream;
 use quote::quote;
