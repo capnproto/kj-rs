@@ -24,9 +24,7 @@ pub type Error = std::io::Error;
 
 pub use crate::ffi::KjWaker;
 
-// TODO(now): Bazel cannot compile this until we can repin its crate dependencies against kj-rs'
-//   GitHub repo.
-// pub use kj_rs_macro::bridge;
+pub use kj_rs_macro::bridge_future;
 
 #[cxx::bridge(namespace = "kj_rs")]
 mod ffi {
