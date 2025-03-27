@@ -84,12 +84,14 @@ use_repo(
 
 vendored = use_extension("//:build/vendor_extensions.bzl", "vendored")
 
-# The list of used repos here is kept up to date by `bazel run //:crates_vendor -- --repin`.
+# The list of used repos here is kept up to date by `bazel run //:crates_vendor -- --repin`,
+# sometimes. Sometimes is isn't, and you have to manually add things here.
 use_repo(
     vendored,
     "crates_vendor",
     "crates_vendor__cxx-1.0.143",
     "crates_vendor__kj-rs-0.1.0",
+    "crates_vendor__kj-rs-macro-0.1.0",
 )
 
 new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")

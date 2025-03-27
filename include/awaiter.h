@@ -7,6 +7,8 @@
 
 #include <kj/debug.h>
 
+#include <array>  // We use it in the implementation of KJRS_DEFINE_FUTURE().
+
 namespace kj_rs {
 
 // =======================================================================================
@@ -307,3 +309,174 @@ private:
 };
 
 }  // namespace kj_rs
+
+// The following file was originally based on cxx-async/include/rust/cxx_async.h from the `cxx-async` crate,
+// which is subject to the following copyright:
+//
+// Copyright (c) Meta Platforms, Inc. and affiliates.
+//
+// https://github.com/pcwalton/cxx-async
+//
+// The `cxx-async` crate is dual-licensed under both the MIT and Apache 2.0 licenses. You will find
+// a copy of one of those licenses in the file named LICENSE in this repository's root directory.
+//
+// Subsequent changes are subject to the following copyright:
+//
+// Copyright (c) 2025 Cloudflare, Inc.
+
+// Warning! Preprocessor abuse follows!
+
+// This is a hack to do variadic arguments in macros.
+// See: https://stackoverflow.com/a/3048361
+
+#define KJRS_JOIN_NAMESPACE_1(a0) a0
+#define KJRS_JOIN_NAMESPACE_2(a0, a1) a0::a1
+#define KJRS_JOIN_NAMESPACE_3(a0, a1, a2) a0::a1::a2
+#define KJRS_JOIN_NAMESPACE_4(a0, a1, a2, a3) a0::a1::a2::a3
+#define KJRS_JOIN_NAMESPACE_5(a0, a1, a2, a3, a4) a0::a1::a2::a3::a4
+#define KJRS_JOIN_NAMESPACE_6(a0, a1, a2, a3, a4, a5) a0::a1::a2::a3::a4::a5
+#define KJRS_JOIN_NAMESPACE_7(a0, a1, a2, a3, a4, a5, a6) \
+  a0::a1::a2::a3::a4::a5::a6
+#define KJRS_JOIN_NAMESPACE_8(a0, a1, a2, a3, a4, a5, a6, a7) \
+  a0::a1::a2::a3::a4::a5::a6::a7
+
+#define KJRS_JOIN_DOLLAR_1(a0) a0
+#define KJRS_JOIN_DOLLAR_2(a0, a1) a0##$##a1
+#define KJRS_JOIN_DOLLAR_3(a0, a1, a2) a0##$##a1##$##a2
+#define KJRS_JOIN_DOLLAR_4(a0, a1, a2, a3) a0##$##a1##$##a2##$##a3
+#define KJRS_JOIN_DOLLAR_5(a0, a1, a2, a3, a4) \
+  a0##$##a1##$##a2##$##a3##$##a4
+#define KJRS_JOIN_DOLLAR_6(a0, a1, a2, a3, a4, a5) \
+  a0##$##a1##$##a2##$##a3##$##a4##$##a5
+#define KJRS_JOIN_DOLLAR_7(a0, a1, a2, a3, a4, a5, a6) \
+  a0##$##a1##$##a2##$##a3##$##a4##$##a5##$##a6
+#define KJRS_JOIN_DOLLAR_8(a0, a1, a2, a3, a4, a5, a6, a7) \
+  a0##$##a1##$##a2##$##a3##$##a4##$##a5##$##a6##$##a7
+
+#define KJRS_STRIP_NAMESPACE_1(a0) a0
+#define KJRS_STRIP_NAMESPACE_2(a0, a1) a1
+#define KJRS_STRIP_NAMESPACE_3(a0, a1, a2) a2
+#define KJRS_STRIP_NAMESPACE_4(a0, a1, a2, a3) a3
+#define KJRS_STRIP_NAMESPACE_5(a0, a1, a2, a3, a4) a4
+#define KJRS_STRIP_NAMESPACE_6(a0, a1, a2, a3, a4, a5) a5
+#define KJRS_STRIP_NAMESPACE_7(a0, a1, a2, a3, a4, a5, a6) a6
+#define KJRS_STRIP_NAMESPACE_8(a0, a1, a2, a3, a4, a5, a6, a7) a7
+
+#define KJRS_OPEN_NAMESPACE_1(a0)
+#define KJRS_OPEN_NAMESPACE_2(a0, a1) namespace a0 {
+#define KJRS_OPEN_NAMESPACE_3(a0, a1, a2) namespace a0::a1 {
+#define KJRS_OPEN_NAMESPACE_4(a0, a1, a2, a3) namespace a0::a1::a2 {
+#define KJRS_OPEN_NAMESPACE_5(a0, a1, a2, a3, a4) namespace a0::a1::a2::a3 {
+#define KJRS_OPEN_NAMESPACE_6(a0, a1, a2, a3, a4, a5) \
+  namespace a0::a1::a2::a3::a4 {
+#define KJRS_OPEN_NAMESPACE_7(a0, a1, a2, a3, a4, a5, a6) \
+  namespace a0::a1::a2::a3::a4::a5 {
+#define KJRS_OPEN_NAMESPACE_8(a0, a1, a2, a3, a4, a5, a6, a7) \
+  namespace a0::a1::a2::a3::a4::a5::a6 {
+
+#define KJRS_CLOSE_NAMESPACE_1(a0)
+#define KJRS_CLOSE_NAMESPACE_2(a0, a1) }
+#define KJRS_CLOSE_NAMESPACE_3(a0, a1, a2) }
+#define KJRS_CLOSE_NAMESPACE_4(a0, a1, a2, a3) }
+#define KJRS_CLOSE_NAMESPACE_5(a0, a1, a2, a3, a4) }
+#define KJRS_CLOSE_NAMESPACE_6(a0, a1, a2, a3, a4, a5) }
+#define KJRS_CLOSE_NAMESPACE_7(a0, a1, a2, a3, a4, a5, a6) }
+#define KJRS_CLOSE_NAMESPACE_8(a0, a1, a2, a3, a4, a5, a6, a7) }
+
+// Need a level of indirection here because of
+// https://stackoverflow.com/a/1489985
+#define KJRS_CONCAT_3_IMPL(a, b, c) a##b##c
+#define KJRS_CONCAT_3(a, b, c) KJRS_CONCAT_3_IMPL(a, b, c)
+
+// Concatenates `prefix` to the number of variadic arguments supplied (e.g.
+// `prefix_1`, `prefix_2`, etc.)
+#define KJRS_DISPATCH_VARIADIC_IMPL(                 \
+    prefix, unused, a0, a1, a2, a3, a4, a5, a6, a7, ...) \
+  prefix##a7
+#define KJRS_DISPATCH_VARIADIC(prefix, ...) \
+  KJRS_DISPATCH_VARIADIC_IMPL(prefix, __VA_ARGS__, 8, 7, 6, 5, 4, 3, 2, 1, )
+
+#define KJRS_DISPATCH_OPTIONAL_IMPL(prefix, unused, a0, a1, ...) prefix##a1
+#define KJRS_DISPATCH_OPTIONAL(prefix, ...) \
+  KJRS_DISPATCH_OPTIONAL_IMPL(prefix, __VA_ARGS__, 1, 0, )
+
+#define KJRS_JOIN_NAMESPACE(...) \
+  KJRS_DISPATCH_VARIADIC(KJRS_JOIN_NAMESPACE_, __VA_ARGS__)(__VA_ARGS__)
+#define KJRS_JOIN_DOLLAR(...) \
+  KJRS_DISPATCH_VARIADIC(KJRS_JOIN_DOLLAR_, __VA_ARGS__)(__VA_ARGS__)
+#define KJRS_STRIP_NAMESPACE(...)                                \
+  KJRS_DISPATCH_VARIADIC(KJRS_STRIP_NAMESPACE_, __VA_ARGS__) \
+  (__VA_ARGS__)
+#define KJRS_OPEN_NAMESPACE(...) \
+  KJRS_DISPATCH_VARIADIC(KJRS_OPEN_NAMESPACE_, __VA_ARGS__)(__VA_ARGS__)
+#define KJRS_CLOSE_NAMESPACE(...)                                \
+  KJRS_DISPATCH_VARIADIC(KJRS_CLOSE_NAMESPACE_, __VA_ARGS__) \
+  (__VA_ARGS__)
+
+// Define the C++ type corresponding to a bridged Rust Future. That is, for every Rust Future type
+// which you have defined like so:
+//
+// ```
+// #[kj_rs::bridge_future(namespace = demo)]
+// unsafe impl Future for MyFuture {
+//     type Output = Result<T, _>;
+// }
+// #[cxx::bridge(namespace = "demo")]
+// mod ffi {
+//     unsafe extern "C++" {
+//         include!("your-header.h");
+//         type MyFuture = crate::MyFuture;
+//     }
+// }
+// ```
+//
+// There must be a corresponding C++ header file named "your-header.h" containing:
+//
+// ```
+// #include <kj-rs/awaiter.h>
+// KJRS_DEFINE_FUTURE(T, demo, MyFuture);
+// ```
+#define KJRS_DEFINE_FUTURE(type, ...)      \
+  KJRS_OPEN_NAMESPACE(__VA_ARGS__)                                      \
+  class KJRS_STRIP_NAMESPACE(__VA_ARGS__);                             \
+  extern "C" void KJRS_CONCAT_3( \
+      kjrs_, KJRS_JOIN_DOLLAR(__VA_ARGS__), _drop_in_place \
+    )(KJRS_STRIP_NAMESPACE(__VA_ARGS__)* ptr); \
+  extern "C" ::kj_rs::FuturePollStatus KJRS_CONCAT_3( \
+      kjrs_, KJRS_JOIN_DOLLAR(__VA_ARGS__), _poll \
+    )(KJRS_STRIP_NAMESPACE(__VA_ARGS__)& future, const ::kj_rs::KjWaker& waker, void* result); \
+  class KJRS_STRIP_NAMESPACE(__VA_ARGS__) { \
+  public: \
+    KJRS_STRIP_NAMESPACE(__VA_ARGS__)(KJRS_STRIP_NAMESPACE(__VA_ARGS__)&& other) noexcept: repr(other.repr) { \
+      other.repr = {0, 0}; \
+    } \
+    ~KJRS_STRIP_NAMESPACE(__VA_ARGS__)() noexcept { \
+      if (repr != std::array<std::uintptr_t, 2>{0, 0}) { \
+        KJRS_CONCAT_3( \
+          kjrs_, KJRS_JOIN_DOLLAR(__VA_ARGS__), _drop_in_place \
+        )(this); \
+      } \
+    } \
+    \
+    using ExceptionOrValue = ::kj::_::ExceptionOr<::kj::_::FixVoid<type>>; \
+    bool poll(const ::kj_rs::KjWaker& waker, ExceptionOrValue& output) noexcept { \
+      ::kj_rs::BoxFuturePoller<::kj::_::FixVoid<type>> poller; \
+      return poller.poll([this, &waker](void* result) { \
+        return KJRS_CONCAT_3( \
+          kjrs_, KJRS_JOIN_DOLLAR(__VA_ARGS__), _poll \
+        )(*this, waker, result); \
+      }, output); \
+    } \
+    using IsRelocatable = ::std::true_type; \
+  private: \
+    ::std::array<std::uintptr_t, 2> repr; \
+  }; \
+  static inline ::kj_rs::LazyFutureAwaiter<KJRS_STRIP_NAMESPACE(__VA_ARGS__)> \
+  operator co_await(KJRS_STRIP_NAMESPACE(__VA_ARGS__)& future) { \
+    return ::kj::mv(future); \
+  } \
+  static inline ::kj_rs::LazyFutureAwaiter<KJRS_STRIP_NAMESPACE(__VA_ARGS__)> \
+  operator co_await(KJRS_STRIP_NAMESPACE(__VA_ARGS__)&& future) { \
+    return ::kj::mv(future); \
+  } \
+  KJRS_CLOSE_NAMESPACE(__VA_ARGS__)

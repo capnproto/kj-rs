@@ -6,14 +6,12 @@
 #     bazel run @@//deps/rust:crates_vendor
 ###############################################################################
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
-load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
-load("@rules_rust//rust:defs.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_proc_macro")
 
 package(default_visibility = ["//visibility:public"])
 
-rust_library(
-    name = "kj_rs",
+rust_proc_macro(
+    name = "kj_rs_macro",
     srcs = glob(
         include = ["**/*.rs"],
         allow_empty = True,
@@ -32,15 +30,12 @@ rust_library(
     ),
     crate_root = "src/lib.rs",
     edition = "2021",
-    proc_macro_deps = [
-        "@crates_vendor__kj-rs-macro-0.1.0//:kj_rs_macro",
-    ],
     rustc_flags = [
         "--cap-lints=allow",
     ],
     tags = [
         "cargo-bazel",
-        "crate-name=kj-rs",
+        "crate-name=kj-rs-macro",
         "manual",
         "noclippy",
         "norustfmt",
@@ -86,99 +81,8 @@ rust_library(
     }),
     version = "0.1.0",
     deps = [
-        ":kj-rs-headers",
-        "@capnp-cpp//src/kj:kj",
-        "@capnp-cpp//src/kj:kj-async",
-        "@crates_vendor__cxx-1.0.143//:cxx",
-        "@crates_vendor__kj-rs-0.1.0//:build_script_build",
+        "@crates_vendor__proc-macro2-1.0.94//:proc_macro2",
+        "@crates_vendor__quote-1.0.39//:quote",
+        "@crates_vendor__syn-2.0.100//:syn",
     ],
-)
-
-cargo_build_script(
-    name = "_bs",
-    srcs = glob(
-        include = ["**/*.rs"],
-        allow_empty = True,
-    ),
-    build_script_env = {
-        "CARGO_TARGET_DIR": "$${pwd}/$(GENDIR)",
-        "CXXFLAGS": "-std=c++23",
-        "LIBKJ_INCLUDE_PATH": "$${pwd}/$(GENDIR)/external/+_repo_rules+capnp-cpp/src/kj/_virtual_includes/kj:$${pwd}/$(GENDIR)/external/+_repo_rules+capnp-cpp/src/kj/_virtual_includes/kj-async",
-        "LIBKJ_LINK_SEARCH_PATH": "$${pwd}/$(GENDIR)/external/+_repo_rules+capnp-cpp/src/kj",
-    },
-    compile_data = glob(
-        include = ["**"],
-        allow_empty = True,
-        exclude = [
-            "**/* *",
-            "**/*.rs",
-            ".tmp_git_root/**/*",
-            "BUILD",
-            "BUILD.bazel",
-            "WORKSPACE",
-            "WORKSPACE.bazel",
-        ],
-    ),
-    crate_name = "build_script_build",
-    crate_root = "build.rs",
-    data = glob(
-        include = ["**"],
-        allow_empty = True,
-        exclude = [
-            "**/* *",
-            ".tmp_git_root/**/*",
-            "BUILD",
-            "BUILD.bazel",
-            "WORKSPACE",
-            "WORKSPACE.bazel",
-        ],
-    ) + [
-        "@capnp-cpp//src/kj:kj",
-        "@capnp-cpp//src/kj:kj-async",
-        "@kj-rs-demo//deps/rust:kj-async-headers",
-        "@kj-rs-demo//deps/rust:kj-headers",
-    ],
-    edition = "2021",
-    link_deps = [
-        "@crates_vendor__cxx-1.0.143//:cxx",
-    ],
-    links = "kj-async",
-    pkg_name = "kj-rs",
-    rustc_flags = [
-        "--cap-lints=allow",
-    ],
-    tags = [
-        "cargo-bazel",
-        "crate-name=kj-rs",
-        "manual",
-        "noclippy",
-        "norustfmt",
-    ],
-    version = "0.1.0",
-    visibility = ["//visibility:private"],
-    deps = [
-        "@crates_vendor__cxx-build-1.0.112//:cxx_build",
-    ],
-)
-
-alias(
-    name = "build_script_build",
-    actual = ":_bs",
-    tags = ["manual"],
-)
-
-# Additive BUILD file content
-cc_library(
-    name = "kj-rs-headers",
-    hdrs = [
-        "include/awaiter.h",
-        "include/executor-guarded.h",
-        "include/future.h",
-        "include/linked-group.h",
-        "include/promise.h",
-        "include/waker.h",
-    ],
-    include_prefix = "kj-rs",
-    strip_include_prefix = "include",
-    visibility = ["//visibility:public"],
 )

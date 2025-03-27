@@ -24,6 +24,8 @@ pub type Error = std::io::Error;
 
 pub use crate::ffi::KjWaker;
 
+pub use kj_rs_macro::bridge_future;
+
 #[cxx::bridge(namespace = "kj_rs")]
 mod ffi {
     extern "Rust" {

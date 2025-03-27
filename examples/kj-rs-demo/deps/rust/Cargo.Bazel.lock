@@ -130,10 +130,21 @@ checksum = "a0d2fde1f7b3d48b8395d5f2de76c18a528bd6a9cdde438df747bfcba3e05d6f"
 [[package]]
 name = "kj-rs"
 version = "0.1.0"
-source = "git+https://github.com/capnproto/kj-rs#72c50d33dd94b689a6a66aaebfae3fe47bb4ed6f"
+source = "git+https://github.com/capnproto/kj-rs?branch=harris%2Fimplement-proc-macro#e7774afb1a42930b6d3a53515f154935654676fb"
 dependencies = [
  "cxx",
  "cxx-build",
+ "kj-rs-macro",
+]
+
+[[package]]
+name = "kj-rs-macro"
+version = "0.1.0"
+source = "git+https://github.com/capnproto/kj-rs?branch=harris%2Fimplement-proc-macro#e7774afb1a42930b6d3a53515f154935654676fb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
