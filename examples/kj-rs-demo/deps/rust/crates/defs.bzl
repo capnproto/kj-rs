@@ -488,10 +488,20 @@ def crate_repositories():
     maybe(
         new_git_repository,
         name = "crates_vendor__kj-rs-0.1.0",
-        commit = "72c50d33dd94b689a6a66aaebfae3fe47bb4ed6f",
+        commit = "e7774afb1a42930b6d3a53515f154935654676fb",
         init_submodules = True,
         remote = "https://github.com/capnproto/kj-rs",
         build_file = Label("//deps/rust/crates:BUILD.kj-rs-0.1.0.bazel"),
+    )
+
+    maybe(
+        new_git_repository,
+        name = "crates_vendor__kj-rs-macro-0.1.0",
+        commit = "e7774afb1a42930b6d3a53515f154935654676fb",
+        init_submodules = True,
+        remote = "https://github.com/capnproto/kj-rs",
+        build_file = Label("//deps/rust/crates:BUILD.kj-rs-macro-0.1.0.bazel"),
+        strip_prefix = "macro",
     )
 
     maybe(

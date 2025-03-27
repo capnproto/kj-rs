@@ -124,6 +124,16 @@ version = "0.1.0"
 dependencies = [
  "cxx",
  "cxx-build",
+ "kj-rs-macro",
+]
+
+[[package]]
+name = "kj-rs-macro"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
