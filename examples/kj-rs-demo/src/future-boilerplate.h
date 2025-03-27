@@ -6,8 +6,8 @@ namespace kj_rs_demo {
 
 class BoxFutureVoidInfallible;
 
-extern "C" void BoxFutureVoidInfallible_drop_in_place(BoxFutureVoidInfallible* ptr);
-extern "C" ::kj_rs::FuturePollStatus BoxFutureVoidInfallible_poll(BoxFutureVoidInfallible& future, const ::kj_rs::KjWaker& waker, void* result);
+extern "C" void kjrs_kj_rs_demo$BoxFutureVoidInfallible_drop_in_place(BoxFutureVoidInfallible* ptr);
+extern "C" ::kj_rs::FuturePollStatus kjrs_kj_rs_demo$BoxFutureVoidInfallible_poll(BoxFutureVoidInfallible& future, const ::kj_rs::KjWaker& waker, void* result);
 
 class BoxFutureVoidInfallible {
 public:
@@ -17,7 +17,7 @@ public:
   ~BoxFutureVoidInfallible() noexcept {
     if (repr != std::array<std::uintptr_t, 2>{0, 0}) {
       // Safety: We can assume that `this` is a valid pointer while we're in the destructor.
-      BoxFutureVoidInfallible_drop_in_place(this);
+      kjrs_kj_rs_demo$BoxFutureVoidInfallible_drop_in_place(this);
     }
   }
 
@@ -33,7 +33,7 @@ public:
       // Safety: `*this` is accepted as `Pin<&mut ...>` in the Rust implementation of
       // `box_future_poll()`. This is safe because it effectively implements Unpin, being
       // non-self-referential, so it's fine if we decide to move it later.
-      return BoxFutureVoidInfallible_poll(*this, waker, result);
+      return kjrs_kj_rs_demo$BoxFutureVoidInfallible_poll(*this, waker, result);
     }, output);
   }
 
@@ -58,8 +58,8 @@ static inline ::kj_rs::LazyFutureAwaiter<BoxFutureVoidInfallible> operator co_aw
 
 class BoxFutureVoid;
 
-extern "C" void BoxFutureVoid_drop_in_place(BoxFutureVoid* ptr);
-extern "C" ::kj_rs::FuturePollStatus BoxFutureVoid_poll(BoxFutureVoid& future, const ::kj_rs::KjWaker& waker, void* result);
+extern "C" void kjrs_kj_rs_demo$BoxFutureVoid_drop_in_place(BoxFutureVoid* ptr);
+extern "C" ::kj_rs::FuturePollStatus kjrs_kj_rs_demo$BoxFutureVoid_poll(BoxFutureVoid& future, const ::kj_rs::KjWaker& waker, void* result);
 
 class BoxFutureVoid {
 public:
@@ -69,7 +69,7 @@ public:
   ~BoxFutureVoid() noexcept {
     if (repr != ::std::array<::std::uintptr_t, 2>{0, 0}) {
       // Safety: We can assume that `this` is a valid pointer while we're in the destructor.
-      BoxFutureVoid_drop_in_place(this);
+      kjrs_kj_rs_demo$BoxFutureVoid_drop_in_place(this);
     }
   }
 
@@ -86,7 +86,7 @@ public:
       // Safety: `*this` is accepted as `Pin<&mut ...>` in the Rust implementation of
       // `box_future_poll()`. This is safe because it effectively implements Unpin, being
       // non-self-referential, so it's fine if we decide to move it later.
-      return BoxFutureVoid_poll(*this, waker, result);
+      return kjrs_kj_rs_demo$BoxFutureVoid_poll(*this, waker, result);
     }, output);
   }
 
@@ -111,8 +111,8 @@ static inline ::kj_rs::LazyFutureAwaiter<BoxFutureVoid> operator co_await(BoxFut
 
 class BoxFutureI32;
 
-extern "C" void BoxFutureI32_drop_in_place(BoxFutureI32* ptr);
-extern "C" ::kj_rs::FuturePollStatus BoxFutureI32_poll(BoxFutureI32& future, const ::kj_rs::KjWaker& waker, void* result);
+extern "C" void kjrs_kj_rs_demo$BoxFutureI32_drop_in_place(BoxFutureI32* ptr);
+extern "C" ::kj_rs::FuturePollStatus kjrs_kj_rs_demo$BoxFutureI32_poll(BoxFutureI32& future, const ::kj_rs::KjWaker& waker, void* result);
 
 class BoxFutureI32 {
 public:
@@ -122,7 +122,7 @@ public:
   ~BoxFutureI32() noexcept {
     if (repr != ::std::array<::std::uintptr_t, 2>{0, 0}) {
       // Safety: We can assume that `this` is a valid pointer while we're in the destructor.
-      BoxFutureI32_drop_in_place(this);
+      kjrs_kj_rs_demo$BoxFutureI32_drop_in_place(this);
     }
   }
 
@@ -139,7 +139,7 @@ public:
       // Safety: `*this` is accepted as `Pin<&mut ...>` in the Rust implementation of
       // `box_future_poll()`. This is safe because it effectively implements Unpin, being
       // non-self-referential, so it's fine if we decide to move it later.
-      return BoxFutureI32_poll(*this, waker, result);
+      return kjrs_kj_rs_demo$BoxFutureI32_poll(*this, waker, result);
     }, output);
   }
 

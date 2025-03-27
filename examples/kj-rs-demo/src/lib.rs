@@ -1,5 +1,4 @@
-mod future_boilerplate;
-use future_boilerplate::*;
+use std::future::Future;
 
 mod promise_boilerplate;
 use promise_boilerplate::*;
@@ -7,8 +6,25 @@ use promise_boilerplate::*;
 mod test_futures;
 use test_futures::*;
 
+type InfallibleResult<T> = std::result::Result<T, std::convert::Infallible>;
+
 type Result<T> = std::io::Result<T>;
 type Error = std::io::Error;
+
+#[kj_rs::bridge_future(namespace = kj_rs_demo)]
+unsafe impl Future for BoxFutureVoidInfallible {
+    type Output = InfallibleResult<()>;
+}
+
+#[kj_rs::bridge_future(namespace = kj_rs_demo)]
+unsafe impl Future for BoxFutureVoid {
+    type Output = Result<()>;
+}
+
+#[kj_rs::bridge_future(namespace = kj_rs_demo)]
+unsafe impl Future for BoxFutureI32 {
+    type Output = Result<i32>;
+}
 
 #[cxx::bridge(namespace = "kj_rs_demo")]
 mod ffi {
