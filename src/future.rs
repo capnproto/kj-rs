@@ -6,6 +6,10 @@ use std::task::Context;
 use std::task::Poll;
 use std::task::Waker;
 
+use std::io::Write;
+
+use std::panic::AssertUnwindSafe;
+
 use crate::KjWaker;
 
 // NOTE: FuturePollStatus must be kept in sync with the C++ enum of the same name in future.h
@@ -47,31 +51,32 @@ where
 {
     let waker = Waker::from(waker);
     let mut context = Context::from_waker(&waker);
-    // let result = panic::catch_unwind(AssertUnwindSafe(move || {
-    match future.poll(&mut context) {
-        Poll::Ready(Ok(value)) => {
-            std::ptr::write(result as *mut T, value);
-            FuturePollStatus::Complete
+    let result = std::panic::catch_unwind(AssertUnwindSafe(move || {
+        match future.poll(&mut context) {
+            Poll::Ready(Ok(value)) => {
+                std::ptr::write(result as *mut T, value);
+                FuturePollStatus::Complete
+            }
+            Poll::Ready(Err(error)) => {
+                std::ptr::write(result as *mut String, error.to_string());
+                FuturePollStatus::Error
+            }
+            Poll::Pending => FuturePollStatus::Pending,
         }
-        Poll::Ready(Err(error)) => {
-            std::ptr::write(result as *mut String, error.to_string());
-            FuturePollStatus::Error
-        }
-        Poll::Pending => FuturePollStatus::Pending,
-    }
-    // }));
+    }));
 
-    // match result {
-    //     Ok(result) => result,
-    //     Err(error) => {
-    //         drop(writeln!(
-    //             io::stderr(),
-    //             "Rust async code panicked when awaited from C++: {:?}",
-    //             error
-    //         ));
-    //         process::abort();
-    //     }
-    // }
+    match result {
+        Ok(result) => result,
+        Err(error) => {
+            // TODO(now): Figure out how to test this case.
+            drop(writeln!(
+                std::io::stderr(),
+                "Rust async code panicked when awaited from C++: {:?}",
+                error
+            ));
+            std::process::abort();
+        }
+    }
 }
 
 // Expose Pin<Box<dyn Future<Output = ()>> to C++ as BoxFutureVoid.
