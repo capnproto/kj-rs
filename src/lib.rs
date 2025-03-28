@@ -26,6 +26,15 @@ pub use crate::ffi::KjWaker;
 
 pub use kj_rs_macro::bridge_future;
 
+mod result;
+
+pub mod private {
+    pub use crate::result::Result;
+}
+
+mod exception;
+pub use exception::Exception;
+
 #[cxx::bridge(namespace = "kj_rs")]
 mod ffi {
     extern "Rust" {

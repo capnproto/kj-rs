@@ -9,7 +9,7 @@ use std::pin::Pin;
 use std::task::Context;
 use std::task::Poll;
 
-type CxxResult<T> = std::result::Result<T, cxx::Exception>;
+type CxxResult<T> = std::result::Result<T, crate::Exception>;
 
 // The inner pointer is never read on Rust's side, so Rust thinks it's dead code.
 #[allow(dead_code)]
