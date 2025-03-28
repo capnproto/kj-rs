@@ -58,12 +58,12 @@ impl ::kj_rs::KjPromise for PromiseVoid {
         }
     }
     // https://github.com/dtolnay/cxx/blob/86cd652c06c5cb4c2e24d3ab555cf707b4ae0883/macro/src/expand.rs#L635
-    unsafe fn unwrap(node: OwnPromiseNode) -> std::result::Result<Self::Output, cxx::Exception> {
+    unsafe fn unwrap(node: OwnPromiseNode) -> std::result::Result<Self::Output, kj_rs::Exception> {
         unsafe extern "C" {
             fn own_promise_node_unwrap_void(
                 node: *mut OwnPromiseNode,
                 result: *mut (),
-            ) -> cxx::private::Result;
+            ) -> ::kj_rs::private::Result;
         }
         let mut node = ::cxx::core::mem::MaybeUninit::new(node);
         let mut ret = ::cxx::core::mem::MaybeUninit::<Self::Output>::uninit();
@@ -125,12 +125,12 @@ impl ::kj_rs::KjPromise for PromiseI32 {
         }
     }
     // https://github.com/dtolnay/cxx/blob/86cd652c06c5cb4c2e24d3ab555cf707b4ae0883/macro/src/expand.rs#L635
-    unsafe fn unwrap(node: OwnPromiseNode) -> std::result::Result<Self::Output, cxx::Exception> {
+    unsafe fn unwrap(node: OwnPromiseNode) -> std::result::Result<Self::Output, kj_rs::Exception> {
         unsafe extern "C" {
             fn own_promise_node_unwrap_i32(
                 node: *mut OwnPromiseNode,
                 result: *mut i32,
-            ) -> cxx::private::Result;
+            ) -> ::kj_rs::private::Result;
         }
         // `own_promise_node_unwrap_*()` consumes `node`, so we must avoid dropping it ourselves.
         let mut node = ::cxx::core::mem::MaybeUninit::new(node);

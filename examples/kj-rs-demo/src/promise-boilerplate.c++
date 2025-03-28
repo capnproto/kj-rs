@@ -20,7 +20,7 @@ T unwrapNode(OwnPromiseNode node) {
 }
 
 extern "C" {
-  ::kj_rs::repr::PtrLen cxxbridge1$exception(const char *, std::size_t len) noexcept;
+  ::kj_rs::repr::PtrLen kjrs$exception(const char *, std::size_t len) noexcept;
 }
 
 template <typename T>
@@ -38,7 +38,7 @@ template <typename T>
     error.ptr = nullptr;
   })) {
     auto description = exception.getDescription();
-    error = cxxbridge1$exception(description.cStr(), description.size());
+    error = kjrs$exception(description.cStr(), description.size());
   }
   return error;
 }
