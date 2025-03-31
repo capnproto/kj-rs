@@ -241,10 +241,10 @@ void FuturePollEvent::enterPollScope() noexcept {
   }
 }
 
-void FuturePollEvent::onReady(kj::_::Event* event) noexcept {
+void FuturePollEvent::onReady(kj::_::Event*) noexcept {
   KJ_UNIMPLEMENTED("FuturePollEvent's PromiseNode base class exists only for tracing");
 }
-void FuturePollEvent::get(kj::_::ExceptionOrValue& output) noexcept {
+void FuturePollEvent::get(kj::_::ExceptionOrValue&) noexcept {
   KJ_UNIMPLEMENTED("FuturePollEvent's PromiseNode base class exists only for tracing");
 }
 
