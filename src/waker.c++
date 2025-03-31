@@ -45,7 +45,7 @@ PromiseArcWakerPair ArcWaker::create(const kj::Executor& executor) {
   //   optimizable to one.
   // TODO(perf): This heap allocation could also probably be collapsed into the fulfiller's.
   auto waker = kj::arc<ArcWaker>(kj::Badge<ArcWaker>(), executor.newPromiseAndCrossThreadFulfiller<void>());
-  auto promise = waker->getPromise();
+  auto promise = const_cast<ArcWaker*>(waker.get())->getPromise();
   return {
     .promise = kj::mv(promise),
     .waker = kj::mv(waker),
