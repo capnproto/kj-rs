@@ -175,7 +175,7 @@ impl OptionWaker {
         self.inner = None;
     }
 
-    pub fn wake(&mut self) {
+    pub fn wake_mut(&mut self) {
         self.inner
             .take()
             .expect(

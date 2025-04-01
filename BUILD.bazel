@@ -1,0 +1,5 @@
+alias(
+    name = "kj-rs",
+    actual = "//src:kj-rs",
+    visibility = ["//visibility:public"],
+)

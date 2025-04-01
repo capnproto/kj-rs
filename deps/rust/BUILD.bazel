@@ -1,0 +1,13 @@
+load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_vendor")
+load("//:build/cc_headers.bzl", "cc_headers")
+
+crates_vendor(
+    name = "crates_vendor",
+    cargo_lockfile = ":Cargo.Bazel.lock",
+    generate_binaries = True,
+    mode = "remote",
+    packages = {
+        "cxx": crate.spec(git = "https://github.com/cloudflare/workerd-cxx.git"),
+        "cxxbridge-cmd": crate.spec(git = "https://github.com/cloudflare/workerd-cxx.git"),
+    },
+)

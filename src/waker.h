@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kj-rs/promise.h>
+#include "promise.h"
 
 #include <kj/async.h>
 #include <kj/mutex.h>

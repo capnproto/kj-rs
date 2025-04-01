@@ -1,0 +1,51 @@
+load("//:build/rust_cxx_bridge.bzl", "rust_cxx_bridge")
+load("@rules_rust//rust:defs.bzl", "rust_library")
+
+cc_library(
+    name = "kj-rs-lib",
+    srcs = glob(["*.c++"]),
+    hdrs = glob(["*.h"]),
+    include_prefix = "kj-rs",
+    deps = [
+        ":bridge",
+    ],
+)
+
+rust_library(
+    name = "kj-rs",
+    srcs = glob(["*.rs"]),
+    edition = "2021",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@crates_vendor//:cxx",
+        ":kj-rs-lib",
+        ":bridge"
+    ],
+    compile_data = glob(["*.h"]),
+)
+
+rust_cxx_bridge(
+    name = "bridge",
+    src = "lib.rs",
+    hdrs = glob(["*.h"]),
+    deps = [
+        "@crates_vendor//:cxx",
+        ":cxx",
+        "@capnp-cpp//src/kj:kj",
+        "@capnp-cpp//src/kj:kj-async",
+    ],
+    include_prefix = "kj-rs",
+)
+
+genrule(
+    name = "cxx/generated",
+    outs = ["cxx.h"],
+    cmd = "$(location @crates_vendor//:cxxbridge-cmd__cxxbridge) --header > \"$@\"",
+    tools = ["@crates_vendor//:cxxbridge-cmd__cxxbridge"],
+)
+
+cc_library(
+    name = "cxx",
+    hdrs = ["cxx.h"],
+    include_prefix = "rust",
+)

@@ -11,7 +11,7 @@ load("@rules_rust//rust:defs.bzl", "rust_library")
 package(default_visibility = ["//visibility:public"])
 
 rust_library(
-    name = "cxx_build",
+    name = "clap_builder",
     srcs = glob(
         include = ["**/*.rs"],
         allow_empty = True,
@@ -28,6 +28,13 @@ rust_library(
             "WORKSPACE.bazel",
         ],
     ),
+    crate_features = [
+        "error-context",
+        "help",
+        "std",
+        "suggestions",
+        "usage",
+    ],
     crate_root = "src/lib.rs",
     edition = "2021",
     rustc_flags = [
@@ -35,7 +42,7 @@ rust_library(
     ],
     tags = [
         "cargo-bazel",
-        "crate-name=cxx-build",
+        "crate-name=clap_builder",
         "manual",
         "noclippy",
         "norustfmt",
@@ -79,14 +86,10 @@ rust_library(
         "@rules_rust//rust/platform:x86_64-unknown-uefi": [],
         "//conditions:default": ["@platforms//:incompatible"],
     }),
-    version = "1.0.112",
+    version = "4.5.31",
     deps = [
-        "@crates_vendor__cc-1.2.16//:cc",
-        "@crates_vendor__codespan-reporting-0.11.1//:codespan_reporting",
-        "@crates_vendor__once_cell-1.20.3//:once_cell",
-        "@crates_vendor__proc-macro2-1.0.94//:proc_macro2",
-        "@crates_vendor__quote-1.0.39//:quote",
-        "@crates_vendor__scratch-1.0.8//:scratch",
-        "@crates_vendor__syn-2.0.100//:syn",
+        "@crates_vendor__anstyle-1.0.10//:anstyle",
+        "@crates_vendor__clap_lex-0.7.4//:clap_lex",
+        "@crates_vendor__strsim-0.11.1//:strsim",
     ],
 )
