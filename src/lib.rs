@@ -40,7 +40,7 @@ mod ffi {
         type OptionWaker;
         fn set(&mut self, waker: &WakerRef);
         fn set_none(&mut self);
-        fn wake(&mut self);
+        fn wake_mut(&mut self);
     }
 
     unsafe extern "C++" {

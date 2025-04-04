@@ -1,5 +1,5 @@
-#include <kj-rs/awaiter.h>
-#include <kj-rs/src/lib.rs.h>
+#include "awaiter.h"
+#include <kj-rs/lib.rs.h>
 
 #include <kj/debug.h>
 
@@ -107,7 +107,7 @@ kj::Maybe<kj::Own<kj::_::Event>> RustPromiseAwaiter::fire() {
   } else KJ_IF_SOME(optionWaker, maybeOptionWaker) {
     // This call to `optionWaker.wake()` consumes OptionWaker's inner Waker. If we call it more than
     // once, it will panic. Fortunately, we only call it once.
-    optionWaker.wake();
+    optionWaker.wake_mut();
   } else {
     // We were constructed, and our Event even fired, but our owner still didn't `poll()` us yet.
     // This is currently an unlikely case given how the rest of the code is written, but doing

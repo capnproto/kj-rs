@@ -6,12 +6,12 @@
 #     bazel run @@//deps/rust:crates_vendor
 ###############################################################################
 
-load("@rules_rust//rust:defs.bzl", "rust_proc_macro")
+load("@rules_rust//rust:defs.bzl", "rust_library")
 
 package(default_visibility = ["//visibility:public"])
 
-rust_proc_macro(
-    name = "cxxbridge_macro",
+rust_library(
+    name = "quote",
     srcs = glob(
         include = ["**/*.rs"],
         allow_empty = True,
@@ -28,17 +28,73 @@ rust_proc_macro(
             "WORKSPACE.bazel",
         ],
     ),
+    crate_features = select({
+        "@rules_rust//rust/platform:aarch64-apple-darwin": [
+            "default",  # aarch64-apple-darwin
+            "proc-macro",  # aarch64-apple-darwin
+        ],
+        "@rules_rust//rust/platform:aarch64-pc-windows-msvc": [
+            "default",  # aarch64-pc-windows-msvc
+            "proc-macro",  # aarch64-pc-windows-msvc
+        ],
+        "@rules_rust//rust/platform:aarch64-unknown-linux-gnu": [
+            "default",  # aarch64-unknown-linux-gnu
+            "proc-macro",  # aarch64-unknown-linux-gnu
+        ],
+        "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu": [
+            "default",  # aarch64-unknown-nixos-gnu
+            "proc-macro",  # aarch64-unknown-nixos-gnu
+        ],
+        "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
+            "default",  # arm-unknown-linux-gnueabi
+            "proc-macro",  # arm-unknown-linux-gnueabi
+        ],
+        "@rules_rust//rust/platform:i686-pc-windows-msvc": [
+            "default",  # i686-pc-windows-msvc
+            "proc-macro",  # i686-pc-windows-msvc
+        ],
+        "@rules_rust//rust/platform:i686-unknown-linux-gnu": [
+            "default",  # i686-unknown-linux-gnu
+            "proc-macro",  # i686-unknown-linux-gnu
+        ],
+        "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [
+            "default",  # powerpc-unknown-linux-gnu
+            "proc-macro",  # powerpc-unknown-linux-gnu
+        ],
+        "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [
+            "default",  # s390x-unknown-linux-gnu
+            "proc-macro",  # s390x-unknown-linux-gnu
+        ],
+        "@rules_rust//rust/platform:x86_64-apple-darwin": [
+            "default",  # x86_64-apple-darwin
+            "proc-macro",  # x86_64-apple-darwin
+        ],
+        "@rules_rust//rust/platform:x86_64-pc-windows-msvc": [
+            "default",  # x86_64-pc-windows-msvc
+            "proc-macro",  # x86_64-pc-windows-msvc
+        ],
+        "@rules_rust//rust/platform:x86_64-unknown-freebsd": [
+            "default",  # x86_64-unknown-freebsd
+            "proc-macro",  # x86_64-unknown-freebsd
+        ],
+        "@rules_rust//rust/platform:x86_64-unknown-linux-gnu": [
+            "default",  # x86_64-unknown-linux-gnu
+            "proc-macro",  # x86_64-unknown-linux-gnu
+        ],
+        "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu": [
+            "default",  # x86_64-unknown-nixos-gnu
+            "proc-macro",  # x86_64-unknown-nixos-gnu
+        ],
+        "//conditions:default": [],
+    }),
     crate_root = "src/lib.rs",
-    edition = "2021",
-    proc_macro_deps = [
-        "@crates_vendor__rustversion-1.0.20//:rustversion",
-    ],
+    edition = "2018",
     rustc_flags = [
         "--cap-lints=allow",
     ],
     tags = [
         "cargo-bazel",
-        "crate-name=cxxbridge-macro",
+        "crate-name=quote",
         "manual",
         "noclippy",
         "norustfmt",
@@ -82,10 +138,8 @@ rust_proc_macro(
         "@rules_rust//rust/platform:x86_64-unknown-uefi": [],
         "//conditions:default": ["@platforms//:incompatible"],
     }),
-    version = "1.0.143",
+    version = "1.0.39",
     deps = [
         "@crates_vendor__proc-macro2-1.0.94//:proc_macro2",
-        "@crates_vendor__quote-1.0.39//:quote",
-        "@crates_vendor__syn-2.0.100//:syn",
     ],
 )

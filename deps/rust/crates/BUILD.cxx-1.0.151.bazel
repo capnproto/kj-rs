@@ -37,7 +37,7 @@ rust_library(
     crate_root = "src/lib.rs",
     edition = "2021",
     proc_macro_deps = [
-        "@crates_vendor__cxxbridge-macro-1.0.143//:cxxbridge_macro",
+        "@crates_vendor__cxxbridge-macro-1.0.151//:cxxbridge_macro",
     ],
     rustc_flags = [
         "--cap-lints=allow",
@@ -88,7 +88,7 @@ rust_library(
         "@rules_rust//rust/platform:x86_64-unknown-uefi": [],
         "//conditions:default": ["@platforms//:incompatible"],
     }),
-    version = "1.0.143",
+    version = "1.0.151",
     deps = [
         ":cxx_cc",
         "@crates_vendor__foldhash-0.1.4//:foldhash",

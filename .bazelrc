@@ -1,3 +1,5 @@
+common --enable_platform_specific_config
+
 # TODO(now): Switch to CI only?
 build --verbose_failures
 

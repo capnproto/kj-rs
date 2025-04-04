@@ -4,7 +4,7 @@
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
-def rust_cxx_bridge(name, src, deps = [], include_prefix = None):
+def rust_cxx_bridge(name, src, hdrs, deps = [], include_prefix = None, strip_include_prefix = None):
     """A macro defining a cxx bridge library
 
     Args:
@@ -14,16 +14,6 @@ def rust_cxx_bridge(name, src, deps = [], include_prefix = None):
         include_prefix (string, optional): Path where lib.rs.h is available via the
             :{name}/include` target. Defaults to None.
     """
-    native.alias(
-        name = "%s/header" % name,
-        actual = src + ".h",
-    )
-
-    native.alias(
-        name = "%s/source" % name,
-        actual = src + ".cc",
-    )
-
     run_binary(
         name = "%s/generated" % name,
         srcs = [src],
@@ -38,18 +28,15 @@ def rust_cxx_bridge(name, src, deps = [], include_prefix = None):
             "-o",
             "$(location %s.cc)" % src,
         ],
-        tool = "@cxxbridge-cmd//:cxxbridge-cmd",
+        tool = "@crates_vendor//:cxxbridge-cmd__cxxbridge",
     )
 
     cc_library(
         name = name,
         srcs = [src + ".cc"],
-        linkstatic = True,
-        deps = deps + [":%s/include" % name],
-    )
-
-    cc_library(
-        name = "%s/include" % name,
-        hdrs = [src + ".h"],
+        hdrs = [src + ".h"] + hdrs,
+        # linkstatic = True,
         include_prefix = include_prefix,
+        strip_include_prefix = strip_include_prefix,
+        deps = deps,
     )
