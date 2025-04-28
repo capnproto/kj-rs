@@ -1,0 +1,12 @@
+{
+    "rust-analyzer.workspace.discoverConfig": {
+        "command": [
+            "just",
+            "_rust-analyzer"
+        ],
+        "progressLabel": "generating rust analyzer config",
+        "filesToWatch": [
+            "BUILD.bazel"
+        ]
+    }
+}
