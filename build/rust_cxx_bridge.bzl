@@ -28,7 +28,7 @@ def rust_cxx_bridge(name, src, hdrs, deps = [], include_prefix = None, strip_inc
             "-o",
             "$(location %s.cc)" % src,
         ],
-        tool = "@crates_vendor//:cxxbridge-cmd__cxxbridge",
+        tool = "@workerd-cxx//:codegen",
     )
 
     cc_library(

@@ -40,6 +40,14 @@ http_archive(
     url = "https://github.com/capnproto/capnproto/tarball/20af9fe2de10a2e7f621a212351d20860cc32a0d",
 )
 
+http_archive(
+    name = "workerd-cxx",
+    sha256 = "b54d7796d5287286e2051fd7fb4f10b48db343bb16f6ba6137a438a71797ad39",
+    strip_prefix = "cloudflare-workerd-cxx-ca0033f",
+    type = "tgz",
+    url = "https://github.com/cloudflare/workerd-cxx/tarball/ca0033fa22cc96b17ff2ba7bc90a33a9cc6f6042",
+)
+
 # Vendored crates
 
 vendored = use_extension("//:build/vendor_extensions.bzl", "vendored")
@@ -47,7 +55,14 @@ vendored = use_extension("//:build/vendor_extensions.bzl", "vendored")
 # The list of used repos here is kept up to date by `bazel run //deps/rust:crates_vendor -- --repin`.
 use_repo(
     vendored,
-    "crates_vendor",
-    "crates_vendor__cxx-1.0.151",
-    "crates_vendor__cxxbridge-cmd-1.0.151",
+    "crates.io",
+    "crates.io__cc-1.2.20",
+    "crates.io__clap-4.5.37",
+    "crates.io__codespan-reporting-0.12.0",
+    "crates.io__foldhash-0.1.4",
+    "crates.io__proc-macro2-1.0.94",
+    "crates.io__quote-1.0.39",
+    "crates.io__rustversion-1.0.20",
+    "crates.io__scratch-1.0.8",
+    "crates.io__syn-2.0.100",
 )

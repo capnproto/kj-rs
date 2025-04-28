@@ -17,7 +17,7 @@ rust_library(
     edition = "2021",
     visibility = ["//visibility:public"],
     deps = [
-        "@crates_vendor//:cxx",
+        "@workerd-cxx//:cxx",
         ":kj-rs-lib",
         ":bridge"
     ],
@@ -29,7 +29,7 @@ rust_cxx_bridge(
     src = "lib.rs",
     hdrs = glob(["*.h"]),
     deps = [
-        "@crates_vendor//:cxx",
+        "@workerd-cxx//:cxx",
         ":cxx",
         "@capnp-cpp//src/kj:kj",
         "@capnp-cpp//src/kj:kj-async",
@@ -40,8 +40,8 @@ rust_cxx_bridge(
 genrule(
     name = "cxx/generated",
     outs = ["cxx.h"],
-    cmd = "$(location @crates_vendor//:cxxbridge-cmd__cxxbridge) --header > \"$@\"",
-    tools = ["@crates_vendor//:cxxbridge-cmd__cxxbridge"],
+    cmd = "$(location @workerd-cxx//:codegen) --header > \"$@\"",
+    tools = ["@workerd-cxx//:codegen"],
 )
 
 cc_library(

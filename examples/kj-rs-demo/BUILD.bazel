@@ -19,7 +19,7 @@ rust_library(
     deps = [
         ":rust-bridge",
         # TODO(now): Why isn't :cxx transitive?
-        "@crates_vendor//:cxx",
+        "@workerd-cxx//:cxx",
         "//:kj-rs",
     ],
 )
@@ -47,7 +47,7 @@ cc_library(
         "//:kj-rs",
         "@capnp-cpp//src/kj:kj",
         "@capnp-cpp//src/kj:kj-async",
-        "@crates_vendor//:cxx_cc",
+        # "@workerd-cxx//:cxx_cc",
     ],
 )
 
