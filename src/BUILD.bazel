@@ -6,6 +6,10 @@ cc_library(
     srcs = glob(["*.c++"]),
     hdrs = glob(["*.h"]),
     include_prefix = "kj-rs",
+    linkstatic = select({
+        "@platforms//os:windows": True,
+        "//conditions:default": False,
+    }),
     deps = [
         ":bridge",
     ],
@@ -14,27 +18,27 @@ cc_library(
 rust_library(
     name = "kj-rs",
     srcs = glob(["*.rs"]),
+    compile_data = glob(["*.h"]),
     edition = "2021",
     visibility = ["//visibility:public"],
     deps = [
-        "@workerd-cxx//:cxx",
+        ":bridge",
         ":kj-rs-lib",
-        ":bridge"
+        "@workerd-cxx//:cxx",
     ],
-    compile_data = glob(["*.h"]),
 )
 
 rust_cxx_bridge(
     name = "bridge",
     src = "lib.rs",
     hdrs = glob(["*.h"]),
+    include_prefix = "kj-rs",
     deps = [
-        "@workerd-cxx//:cxx",
         ":cxx",
         "@capnp-cpp//src/kj:kj",
         "@capnp-cpp//src/kj:kj-async",
+        "@workerd-cxx//:cxx",
     ],
-    include_prefix = "kj-rs",
 )
 
 genrule(

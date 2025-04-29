@@ -35,8 +35,11 @@ def rust_cxx_bridge(name, src, hdrs, deps = [], include_prefix = None, strip_inc
         name = name,
         srcs = [src + ".cc"],
         hdrs = [src + ".h"] + hdrs,
-        # linkstatic = True,
+        linkstatic = select({
+            "@platforms//os:windows": True,
+            "//conditions:default": False,
+        }),
         include_prefix = include_prefix,
         strip_include_prefix = strip_include_prefix,
-        deps = deps,
+        deps = ["//deps/rust:runtime"] + deps,
     )
