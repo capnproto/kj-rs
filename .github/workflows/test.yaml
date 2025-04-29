@@ -1,0 +1,28 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  bazel:
+    strategy:
+      matrix:
+        os: [ 
+          { name: linux, image: ubuntu-24.04 },
+          { name: macOS, image: macos-15 },
+          { name: windows, image: windows-2025 },
+        ]
+
+    runs-on: ${{ matrix.os.image }}
+    name: bazel (${{ matrix.os.name }})
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Bazel Test
+      run: bazel test //...
