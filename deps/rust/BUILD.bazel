@@ -38,5 +38,6 @@ write_file(
 rust_static_library(
     name = "empty_lib",
     srcs = [":lib.rs"],
+    edition = "2021",
     tags = ["manual"],
 )
