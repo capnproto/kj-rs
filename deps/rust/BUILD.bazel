@@ -1,4 +1,6 @@
-load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_vendor")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@rules_rust//crate_universe:defs.bzl", "crates_vendor")
+load("@rules_rust//rust:defs.bzl", "rust_static_library")
 load("@workerd-cxx//third-party:cargo.bzl", WORKERD_CXX_PACKAGES = "PACKAGES")
 
 crates_vendor(
@@ -7,4 +9,34 @@ crates_vendor(
     generate_binaries = True,
     mode = "remote",
     packages = WORKERD_CXX_PACKAGES,
+)
+
+# Windows build fixes due to rust libraries missing symbols:
+# https://github.com/bazelbuild/rules_rust/blob/144d34fd/ffi/cc/global_allocator_library/BUILD.bazel#L3
+# `empty_lib` static library will bring all the symbols in.
+cc_library(
+    name = "runtime",
+    linkopts = select({
+        "@platforms//os:windows": [
+            "ntdll.lib",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = select({
+        "@platforms//os:windows": [":empty_lib"],
+        "//conditions:default": [],
+    }),
+)
+
+write_file(
+    name = "lib_rs",
+    out = "lib.rs",
+    tags = ["manual"],
+)
+
+rust_static_library(
+    name = "empty_lib",
+    srcs = [":lib.rs"],
+    tags = ["manual"],
 )

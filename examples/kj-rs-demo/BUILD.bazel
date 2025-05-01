@@ -42,6 +42,10 @@ cc_library(
         "src/test-promises.h",
     ],
     include_prefix = "kj-rs-demo",
+    linkstatic = select({
+        "@platforms//os:windows": True,
+        "//conditions:default": False,
+    }),
     strip_include_prefix = "src",
     deps = [
         "//:kj-rs",
@@ -57,11 +61,15 @@ cc_library(
         "src/promise-boilerplate.c++",
         "src/test-promises.c++",
     ],
+    linkstatic = select({
+        "@platforms//os:windows": True,
+        "//conditions:default": False,
+    }),
     visibility = ["//visibility:public"],
     deps = [
         ":awaitables-include",
-        "//:kj-rs",
         ":rust-bridge",
+        "//:kj-rs",
     ],
 )
 
