@@ -31,7 +31,7 @@ impl IntoFuture for PromiseVoid {
     type Output = <::kj_rs::PromiseFuture<PromiseVoid> as Future>::Output;
 
     fn into_future(self) -> Self::IntoFuture {
-        ::kj_rs::PromiseFuture::new(self)
+        ::kj_rs::PromiseFuture::new(self, ())
     }
 }
 
@@ -43,6 +43,7 @@ unsafe impl ::cxx::ExternType for PromiseVoid {
 
 impl ::kj_rs::KjPromise for PromiseVoid {
     type Output = ();
+    type Data = ();
     fn into_own_promise_node(self) -> OwnPromiseNode {
         unsafe extern "C" {
             fn promise_into_own_promise_node_void(
@@ -58,7 +59,7 @@ impl ::kj_rs::KjPromise for PromiseVoid {
         }
     }
     // https://github.com/dtolnay/cxx/blob/86cd652c06c5cb4c2e24d3ab555cf707b4ae0883/macro/src/expand.rs#L635
-    unsafe fn unwrap(node: OwnPromiseNode) -> std::result::Result<Self::Output, cxx::Exception> {
+    unsafe fn unwrap(node: OwnPromiseNode, _data: &()) -> std::result::Result<Self::Output, cxx::Exception> {
         unsafe extern "C" {
             fn own_promise_node_unwrap_void(
                 node: *mut OwnPromiseNode,
@@ -98,7 +99,7 @@ impl IntoFuture for PromiseI32 {
     type Output = <::kj_rs::PromiseFuture<PromiseI32> as Future>::Output;
 
     fn into_future(self) -> Self::IntoFuture {
-        ::kj_rs::PromiseFuture::new(self)
+        ::kj_rs::PromiseFuture::new(self, ())
     }
 }
 
@@ -110,6 +111,7 @@ unsafe impl ::cxx::ExternType for PromiseI32 {
 
 impl ::kj_rs::KjPromise for PromiseI32 {
     type Output = i32;
+    type Data = ();
     fn into_own_promise_node(self) -> OwnPromiseNode {
         unsafe extern "C" {
             fn promise_into_own_promise_node_i32(
@@ -125,7 +127,7 @@ impl ::kj_rs::KjPromise for PromiseI32 {
         }
     }
     // https://github.com/dtolnay/cxx/blob/86cd652c06c5cb4c2e24d3ab555cf707b4ae0883/macro/src/expand.rs#L635
-    unsafe fn unwrap(node: OwnPromiseNode) -> std::result::Result<Self::Output, cxx::Exception> {
+    unsafe fn unwrap(node: OwnPromiseNode, _data: &()) -> std::result::Result<Self::Output, cxx::Exception> {
         unsafe extern "C" {
             fn own_promise_node_unwrap_i32(
                 node: *mut OwnPromiseNode,
