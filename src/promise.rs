@@ -4,6 +4,7 @@ use crate::PromiseAwaiter;
 
 use std::marker::PhantomData;
 
+use std::ffi::c_void;
 use std::future::Future;
 use std::pin::Pin;
 use std::task::Context;
@@ -14,7 +15,7 @@ type CxxResult<T> = std::result::Result<T, cxx::Exception>;
 // The inner pointer is never read on Rust's side, so Rust thinks it's dead code.
 #[allow(dead_code)]
 #[repr(transparent)]
-pub struct OwnPromiseNode(*const () /* kj::_::PromiseNode* */);
+pub struct OwnPromiseNode(*mut c_void /* kj::_::PromiseNode* */);
 
 // Safety: KJ Promises are not associated with threads, but with event loops at construction time.
 // Therefore, they can be polled from any thread, as long as that thread has the correct event loop
@@ -25,19 +26,19 @@ pub struct OwnPromiseNode(*const () /* kj::_::PromiseNode* */);
 // correct-executor guarantee.
 unsafe impl Send for OwnPromiseNode {}
 
-impl Drop for OwnPromiseNode {
-    fn drop(&mut self) {
+// impl Drop for OwnPromiseNode {
+//     fn drop(&mut self) {
         // Safety:
         // 1. Pointer to self is non-null, and obviously points to valid memory.
         // 2. We do not read or write to the OwnPromiseNode's memory, so there are no atomicity nor
         //    interleaved pointer/reference access concerns.
         //
         // https://doc.rust-lang.org/std/ptr/index.html#safety
-        unsafe {
-            crate::ffi::own_promise_node_drop_in_place(self);
-        }
-    }
-}
+        // unsafe {
+        //     crate::ffi::own_promise_node_drop_in_place(self);
+        // }
+    // }
+// }
 
 // Safety: We have a static_assert in promise.c++ which breaks if you change the size or alignment
 // of the C++ definition of OwnPromiseNode, with a comment directing the reader to adjust the
@@ -89,3 +90,55 @@ impl<P: KjPromise> Future for PromiseFuture<P> {
         }
     }
 }
+
+type UnwrapCallback =
+    unsafe extern "C" fn(node: *mut c_void, ret: *mut c_void) -> cxx::private::Result;
+
+#[repr(C)]
+pub struct KjPromiseNodeImpl {
+    pub node: *mut c_void,
+    pub unwrap: UnwrapCallback,
+}
+
+pub fn new_callbacks_promise_future<T>(
+    r#impl: KjPromiseNodeImpl,
+) -> impl Future<Output = CxxResult<T>> {
+    PromiseFuture::new(
+        CallbacksFuture {
+            node: r#impl.node,
+            _phantom: PhantomData,
+        },
+        FutureCallbacks {
+            unwrap: r#impl.unwrap,
+        },
+    )
+}
+
+pub struct FutureCallbacks {
+    pub unwrap: UnwrapCallback,
+}
+
+pub struct CallbacksFuture<T> {
+    pub node: *mut c_void,
+    _phantom: PhantomData<T>,
+}
+
+impl<T> KjPromise for CallbacksFuture<T> {
+    type Output = T;
+    type Data = FutureCallbacks;
+
+    fn into_own_promise_node(self) -> OwnPromiseNode {
+        OwnPromiseNode(self.node)
+    }
+
+    unsafe fn unwrap(node: OwnPromiseNode, callbacks: &FutureCallbacks) -> CxxResult<Self::Output> {
+        let mut ret = ::cxx::core::mem::MaybeUninit::<Self::Output>::uninit();
+        (callbacks.unwrap)(
+            node.0,
+            ret.as_mut_ptr().cast::<c_void>(),
+        ).exception()?;
+        Ok(ret.assume_init())
+    }
+}
+
+unsafe impl<T: Send> Send for CallbacksFuture<T> {}

@@ -16,6 +16,8 @@ mod promise;
 pub use promise::KjPromise;
 pub use promise::OwnPromiseNode;
 pub use promise::PromiseFuture;
+pub use promise::new_callbacks_promise_future;
+pub use promise::KjPromiseNodeImpl;
 
 mod waker;
 
@@ -58,8 +60,6 @@ mod ffi {
         include!("kj-rs/promise.h");
 
         type OwnPromiseNode = crate::OwnPromiseNode;
-
-        unsafe fn own_promise_node_drop_in_place(node: *mut OwnPromiseNode);
     }
 
     unsafe extern "C++" {
