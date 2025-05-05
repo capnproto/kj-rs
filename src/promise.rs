@@ -4,6 +4,7 @@ use crate::PromiseAwaiter;
 
 use std::marker::PhantomData;
 
+use std::ffi::c_void;
 use std::future::Future;
 use std::pin::Pin;
 use std::task::Context;
@@ -14,7 +15,7 @@ type CxxResult<T> = std::result::Result<T, cxx::Exception>;
 // The inner pointer is never read on Rust's side, so Rust thinks it's dead code.
 #[allow(dead_code)]
 #[repr(transparent)]
-pub struct OwnPromiseNode(*const () /* kj::_::PromiseNode* */);
+pub struct OwnPromiseNode(*mut c_void /* kj::_::PromiseNode* */);
 
 // Safety: KJ Promises are not associated with threads, but with event loops at construction time.
 // Therefore, they can be polled from any thread, as long as that thread has the correct event loop
@@ -25,6 +26,8 @@ pub struct OwnPromiseNode(*const () /* kj::_::PromiseNode* */);
 // correct-executor guarantee.
 unsafe impl Send for OwnPromiseNode {}
 
+// Note: drop is not the only way for OwnPromiseNode to be destroyed.
+// It is forgotten using `MaybeUninit` and its ownership passed over to c++ in `unwrap`.
 impl Drop for OwnPromiseNode {
     fn drop(&mut self) {
         // Safety:
@@ -89,3 +92,55 @@ impl<P: KjPromise> Future for PromiseFuture<P> {
         }
     }
 }
+
+type UnwrapCallback =
+    unsafe extern "C" fn(node: *mut c_void, ret: *mut c_void) -> cxx::private::Result;
+
+#[repr(C)]
+pub struct KjPromiseNodeImpl {
+    pub node: *mut c_void,
+    pub unwrap: UnwrapCallback,
+}
+
+pub fn new_callbacks_promise_future<T>(
+    r#impl: KjPromiseNodeImpl,
+) -> impl Future<Output = CxxResult<T>> {
+    PromiseFuture::new(
+        CallbacksFuture {
+            node: r#impl.node,
+            _phantom: PhantomData,
+        },
+        FutureCallbacks {
+            unwrap: r#impl.unwrap,
+        },
+    )
+}
+
+pub struct FutureCallbacks {
+    pub unwrap: UnwrapCallback,
+}
+
+pub struct CallbacksFuture<T> {
+    pub node: *mut c_void,
+    _phantom: PhantomData<T>,
+}
+
+impl<T> KjPromise for CallbacksFuture<T> {
+    type Output = T;
+    type Data = FutureCallbacks;
+
+    fn into_own_promise_node(self) -> OwnPromiseNode {
+        OwnPromiseNode(self.node)
+    }
+
+    unsafe fn unwrap(node: OwnPromiseNode, callbacks: &FutureCallbacks) -> CxxResult<Self::Output> {
+        let mut ret = ::cxx::core::mem::MaybeUninit::<Self::Output>::uninit();
+        (callbacks.unwrap)(
+            node.0,
+            ret.as_mut_ptr().cast::<c_void>(),
+        ).exception()?;
+        Ok(ret.assume_init())
+    }
+}
+
+unsafe impl<T: Send> Send for CallbacksFuture<T> {}
