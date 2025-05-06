@@ -38,7 +38,6 @@ cc_library(
     name = "awaitables-include",
     hdrs = [
         "src/future-boilerplate.h",
-        "src/promise-boilerplate.h",
         "src/test-promises.h",
     ],
     include_prefix = "kj-rs-demo",
@@ -58,7 +57,6 @@ cc_library(
 cc_library(
     name = "awaitables-cc",
     srcs = [
-        "src/promise-boilerplate.c++",
         "src/test-promises.c++",
     ],
     linkstatic = select({
