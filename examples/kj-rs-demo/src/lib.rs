@@ -1,9 +1,6 @@
 mod future_boilerplate;
 use future_boilerplate::*;
 
-mod promise_boilerplate;
-use promise_boilerplate::*;
-
 mod test_futures;
 use test_futures::*;
 
@@ -12,6 +9,7 @@ type Error = std::io::Error;
 
 #[cxx::bridge(namespace = "kj_rs_demo")]
 mod ffi {
+
     // -----------------------------------------------------
     // Boilerplate
 
@@ -23,13 +21,6 @@ mod ffi {
         type BoxFutureI32 = crate::BoxFutureI32;
     }
 
-    unsafe extern "C++" {
-        include!("kj-rs-demo/promise-boilerplate.h");
-
-        type PromiseVoid = crate::PromiseVoid;
-        type PromiseI32 = crate::PromiseI32;
-    }
-
     // -----------------------------------------------------
     // Test functions
 
@@ -37,12 +28,12 @@ mod ffi {
     unsafe extern "C++" {
         include!("kj-rs-demo/test-promises.h");
 
-        fn new_ready_promise_void() -> PromiseVoid;
-        fn new_pending_promise_void() -> PromiseVoid;
-        fn new_coroutine_promise_void() -> PromiseVoid;
+        async fn new_ready_promise_void();
+        async fn new_pending_promise_void();
+        async fn new_coroutine_promise_void();
 
-        fn new_errored_promise_void() -> PromiseVoid;
-        fn new_ready_promise_i32(value: i32) -> PromiseI32;
+        async fn new_errored_promise_void();
+        async fn new_ready_promise_i32(value: i32) -> i32;
     }
 
     enum CloningAction {

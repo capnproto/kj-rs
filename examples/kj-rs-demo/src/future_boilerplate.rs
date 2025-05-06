@@ -61,7 +61,9 @@ pub unsafe extern "C" fn BoxFutureVoidInfallible_poll(
     waker: &KjWaker,
     result: *mut (),
 ) -> ::kj_rs::FuturePollStatus {
-    unsafe { ::kj_rs::box_future_poll::<BoxFutureVoidInfallible, (), Infallible>(future, waker, result) }
+    unsafe {
+        ::kj_rs::box_future_poll::<BoxFutureVoidInfallible, (), Infallible>(future, waker, result)
+    }
 }
 
 // ---------------------------------------------------------

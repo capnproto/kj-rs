@@ -1,3 +1,5 @@
+#pragma once
+
 #include <kj-rs/awaiter.h>
 
 #include <array>

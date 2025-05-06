@@ -58,20 +58,18 @@ repr::Result unwrapCallback(void* nodePtr, void* ret) noexcept {
   kj::_::ExceptionOr<kj::_::FixVoid<T>> result;
   node->get(result);
 
-  KJ_IF_SOME(e, kj::runCatchingExceptions([ret, &node, &result]() {
-    node = nullptr;
-
-    if constexpr (!kj::isSameType<T, void>()) {
-      new (reinterpret_cast<T*>(ret)) T(::kj::mv(result.value));
-    }
-  })) {
+  KJ_IF_SOME(e, kj::runCatchingExceptions([&node]() { node = nullptr; })) {
     result.addException(kj::mv(e));
   }
 
   KJ_IF_SOME(e, result.exception) {
     return repr::Result::error(e);
-  } else
+  } else {
+    if constexpr (!kj::isSameType<T, void>()) {
+      new (reinterpret_cast<T*>(ret)) T(::kj::mv(KJ_ASSERT_NONNULL(result.value)));
+    }
     return repr::Result::ok();
+  }
 }
 }  // namespace _
 
