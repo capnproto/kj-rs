@@ -22,9 +22,7 @@ void ArcWakerPromiseNode::onReady(kj::_::Event* event) noexcept {
 
 void ArcWakerPromiseNode::get(kj::_::ExceptionOrValue& output) noexcept {
   node->get(output);
-  KJ_IF_SOME(exception, kj::runCatchingExceptions([this]() {
-    node = nullptr;
-  })) {
+  KJ_IF_SOME(exception, kj::runCatchingExceptions([this]() { node = nullptr; })) {
     output.addException(kj::mv(exception));
   }
 }
@@ -44,7 +42,8 @@ PromiseArcWakerPair ArcWaker::create(const kj::Executor& executor) {
   // TODO(perf): newPromiseAndCrossThreadFulfiller() makes two heap allocations, but it is probably
   //   optimizable to one.
   // TODO(perf): This heap allocation could also probably be collapsed into the fulfiller's.
-  auto waker = kj::arc<ArcWaker>(kj::Badge<ArcWaker>(), executor.newPromiseAndCrossThreadFulfiller<void>());
+  auto waker =
+      kj::arc<ArcWaker>(kj::Badge<ArcWaker>(), executor.newPromiseAndCrossThreadFulfiller<void>());
   auto promise = const_cast<ArcWaker*>(waker.get())->getPromise();
   return {
     .promise = kj::mv(promise),
@@ -102,7 +101,8 @@ const KjWaker* LazyArcWaker::clone() const {
 void LazyArcWaker::wake() const {
   // LazyArcWakers are only exposed to Rust by const borrow, meaning Rust can never arrange to call
   // `wake()`, which drops `self`, on this object.
-  KJ_UNIMPLEMENTED("Rust user code should never have possess a consumable reference to LazyArcWaker");
+  KJ_UNIMPLEMENTED(
+      "Rust user code should never have possess a consumable reference to LazyArcWaker");
 }
 
 void LazyArcWaker::wake_by_ref() const {

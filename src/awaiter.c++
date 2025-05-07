@@ -1,4 +1,5 @@
 #include "awaiter.h"
+
 #include <kj-rs/lib.rs.h>
 
 #include <kj/debug.h>
@@ -76,7 +77,8 @@ bindgen \
 
 #endif
 
-RustPromiseAwaiter::RustPromiseAwaiter(OptionWaker& optionWaker, OwnPromiseNode nodeParam, kj::SourceLocation location)
+RustPromiseAwaiter::RustPromiseAwaiter(
+    OptionWaker& optionWaker, OwnPromiseNode nodeParam, kj::SourceLocation location)
     : Event(location),
       maybeOptionWaker(optionWaker),
       node(kj::mv(nodeParam)) {
@@ -89,9 +91,7 @@ RustPromiseAwaiter::~RustPromiseAwaiter() noexcept(false) {
   // LinkedGroup relationship before destroying `node`. If our FuturePollEvent (our LinkedGroup)
   // tries to trace us between now and our destructor completing, `tracePromise()` will ignore the
   // null `node`.
-  unwindDetector.catchExceptionsIfUnwinding([this]() {
-    node = nullptr;
-  });
+  unwindDetector.catchExceptionsIfUnwinding([this]() { node = nullptr; });
 }
 
 kj::Maybe<kj::Own<kj::_::Event>> RustPromiseAwaiter::fire() {
@@ -190,7 +190,8 @@ OwnPromiseNode RustPromiseAwaiter::take_own_promise_node() {
   return kj::mv(node);
 }
 
-void guarded_rust_promise_awaiter_new_in_place(PtrGuardedRustPromiseAwaiter ptr, OptionWaker* optionWaker, OwnPromiseNode node) {
+void guarded_rust_promise_awaiter_new_in_place(
+    PtrGuardedRustPromiseAwaiter ptr, OptionWaker* optionWaker, OwnPromiseNode node) {
   kj::ctor(*ptr, *optionWaker, kj::mv(node));
 }
 void guarded_rust_promise_awaiter_drop_in_place(PtrGuardedRustPromiseAwaiter ptr) {
@@ -221,9 +222,7 @@ void FuturePollEvent::enterPollScope() noexcept {
     kj::_::ExceptionOr<kj::_::Void> output;
 
     node->get(output);
-    KJ_IF_SOME(exception, kj::runCatchingExceptions([this]() {
-      arcWakerPromise = kj::none;
-    })) {
+    KJ_IF_SOME(exception, kj::runCatchingExceptions([this]() { arcWakerPromise = kj::none; })) {
       output.addException(kj::mv(exception));
     }
 

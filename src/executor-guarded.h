@@ -15,7 +15,7 @@ void requireCurrent(const kj::Executor& executor, kj::LiteralStringConst message
 // thread not running the original event loop are met with thrown exceptions.
 template <typename T>
 class ExecutorGuarded {
-public:
+ public:
   template <typename... Args>
   ExecutorGuarded(Args&&... args): value(kj::fwd<Args>(args)...) {}
   ~ExecutorGuarded() noexcept(false) {
@@ -48,7 +48,7 @@ public:
     }
   }
 
-private:
+ private:
   const kj::Executor& executor = kj::getCurrentThreadExecutor();
   T value;
 };

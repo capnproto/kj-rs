@@ -2,7 +2,6 @@
 // TODO(now): Move as many cases as possible into kj-rs.
 
 #include <kj-rs-demo/src/lib.rs.h>
-
 #include <kj-rs/awaiter.h>
 #include <kj-rs/future.h>
 #include <kj-rs/waker.h>
@@ -61,10 +60,10 @@ KJ_TEST("LazyArcWaker: C++ can receive synchronous wakes during poll()") {
 
   // Poll a Future which immediately wakes the Waker with `wake_by_ref()` on various threads, then
   // returns Pending.
-  for (auto testCase: std::initializer_list<Actions> {
-    { CloningAction::None, WakingAction::WakeByRefSameThread },
-    { CloningAction::None, WakingAction::WakeByRefBackgroundThread },
-  }) {
+  for (auto testCase: std::initializer_list<Actions>{
+         {CloningAction::None, WakingAction::WakeByRefSameThread},
+         {CloningAction::None, WakingAction::WakeByRefBackgroundThread},
+       }) {
     kj_rs::LazyArcWaker waker;
 
     auto waking = new_waking_future_void(testCase.cloningAction, testCase.wakingAction);
@@ -80,16 +79,16 @@ KJ_TEST("LazyArcWaker: C++ can receive synchronous wakes during poll()") {
     promise.wait(waitScope);
   }
 
-  for (auto testCase: std::initializer_list<Actions> {
-    { CloningAction::CloneSameThread, WakingAction::WakeByRefSameThread },
-    { CloningAction::CloneSameThread, WakingAction::WakeByRefBackgroundThread },
-    { CloningAction::CloneBackgroundThread, WakingAction::WakeByRefSameThread },
-    { CloningAction::CloneBackgroundThread, WakingAction::WakeByRefBackgroundThread },
-    { CloningAction::CloneSameThread, WakingAction::WakeSameThread },
-    { CloningAction::CloneSameThread, WakingAction::WakeBackgroundThread },
-    { CloningAction::CloneBackgroundThread, WakingAction::WakeSameThread },
-    { CloningAction::CloneBackgroundThread, WakingAction::WakeBackgroundThread },
-  }) {
+  for (auto testCase: std::initializer_list<Actions>{
+         {CloningAction::CloneSameThread, WakingAction::WakeByRefSameThread},
+         {CloningAction::CloneSameThread, WakingAction::WakeByRefBackgroundThread},
+         {CloningAction::CloneBackgroundThread, WakingAction::WakeByRefSameThread},
+         {CloningAction::CloneBackgroundThread, WakingAction::WakeByRefBackgroundThread},
+         {CloningAction::CloneSameThread, WakingAction::WakeSameThread},
+         {CloningAction::CloneSameThread, WakingAction::WakeBackgroundThread},
+         {CloningAction::CloneBackgroundThread, WakingAction::WakeSameThread},
+         {CloningAction::CloneBackgroundThread, WakingAction::WakeBackgroundThread},
+       }) {
     kj_rs::LazyArcWaker waker;
 
     auto waking = new_waking_future_void(testCase.cloningAction, testCase.wakingAction);
@@ -106,9 +105,9 @@ KJ_TEST("LazyArcWaker: C++ can receive synchronous wakes during poll()") {
   }
 
   // Test wake_by_ref()-before-clone().
-  for (auto testCase: std::initializer_list<Actions> {
-    { CloningAction::WakeByRefThenCloneSameThread, WakingAction::WakeSameThread },
-  }) {
+  for (auto testCase: std::initializer_list<Actions>{
+         {CloningAction::WakeByRefThenCloneSameThread, WakingAction::WakeSameThread},
+       }) {
     kj_rs::LazyArcWaker waker;
 
     auto waking = new_waking_future_void(testCase.cloningAction, testCase.wakingAction);
@@ -123,10 +122,10 @@ KJ_TEST("LazyArcWaker: C++ can receive synchronous wakes during poll()") {
   }
 
   // Test no calls to `wake*()`.
-  for (auto testCase: std::initializer_list<Actions> {
-    // Note: the None, None case is covered by `new_pending_future_void()`.
-    { CloningAction::CloneSameThread, WakingAction::None },
-  }) {
+  for (auto testCase: std::initializer_list<Actions>{
+         // Note: the None, None case is covered by `new_pending_future_void()`.
+         {CloningAction::CloneSameThread, WakingAction::None},
+       }) {
     kj_rs::LazyArcWaker waker;
 
     auto waking = new_waking_future_void(testCase.cloningAction, testCase.wakingAction);
@@ -177,18 +176,14 @@ KJ_TEST("RustPromiseAwaiter: Rust can .await KJ promises under a co_await") {
   kj::EventLoop loop;
   kj::WaitScope waitScope(loop);
 
-  []() -> kj::Promise<void> {
-    co_await new_layered_ready_future_void();
-  }().wait(waitScope);
+  []() -> kj::Promise<void> { co_await new_layered_ready_future_void(); }().wait(waitScope);
 }
 
 KJ_TEST("RustPromiseAwaiter: Rust can poll() multiple promises under a single co_await") {
   kj::EventLoop loop;
   kj::WaitScope waitScope(loop);
 
-  []() -> kj::Promise<void> {
-    co_await new_naive_select_future_void();
-  }().wait(waitScope);
+  []() -> kj::Promise<void> { co_await new_naive_select_future_void(); }().wait(waitScope);
 }
 
 // TODO(now): Similar to "Rust can poll() multiple promises ...", but poll() until all are ready.
@@ -210,9 +205,7 @@ KJ_TEST("RustPromiseAwaiter: Rust can poll() KJ promises with non-KJ Wakers") {
   kj::EventLoop loop;
   kj::WaitScope waitScope(loop);
 
-  []() -> kj::Promise<void> {
-    co_await new_wrapped_waker_future_void();
-  }().wait(waitScope);
+  []() -> kj::Promise<void> { co_await new_wrapped_waker_future_void(); }().wait(waitScope);
 }
 
 KJ_TEST("co_awaiting a BoxFuture<Fallible<T>> from C++ can throw") {
@@ -235,27 +228,23 @@ KJ_TEST(".awaiting a Promise<T> from Rust can produce an Err Result") {
   kj::EventLoop loop;
   kj::WaitScope waitScope(loop);
 
-  []() -> kj::Promise<void> {
-    co_await new_error_handling_future_void_infallible();
-  }().wait(waitScope);
+  []() -> kj::Promise<void> { co_await new_error_handling_future_void_infallible(); }().wait(
+           waitScope);
 }
 
 KJ_TEST("Rust can await Promise<int32_t>") {
   kj::EventLoop loop;
   kj::WaitScope waitScope(loop);
 
-  []() -> kj::Promise<void> {
-    co_await new_awaiting_future_i32();
-  }().wait(waitScope);
+  []() -> kj::Promise<void> { co_await new_awaiting_future_i32(); }().wait(waitScope);
 }
 
 KJ_TEST("C++ can await BoxFuture<i32>") {
   kj::EventLoop loop;
   kj::WaitScope waitScope(loop);
 
-  []() -> kj::Promise<void> {
-    KJ_EXPECT(co_await new_ready_future_i32(123) == 123);
-  }().wait(waitScope);
+  []() -> kj::Promise<void> { KJ_EXPECT(co_await new_ready_future_i32(123) == 123); }().wait(
+           waitScope);
 }
 
 // TODO(now): More test cases.

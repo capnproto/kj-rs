@@ -10,9 +10,7 @@ T unwrapNode(OwnPromiseNode node) {
   kj::_::ExceptionOr<kj::_::FixVoid<T>> result;
 
   node->get(result);
-  KJ_IF_SOME(exception, kj::runCatchingExceptions([&node]() {
-    node = nullptr;
-  })) {
+  KJ_IF_SOME(exception, kj::runCatchingExceptions([&node]() { node = nullptr; })) {
     result.addException(kj::mv(exception));
   }
 
@@ -20,7 +18,7 @@ T unwrapNode(OwnPromiseNode node) {
 }
 
 extern "C" {
-  ::kj_rs::repr::PtrLen cxxbridge1$exception(const char *, std::size_t len) noexcept;
+::kj_rs::repr::PtrLen cxxbridge1$exception(const char*, std::size_t len) noexcept;
 }
 
 template <typename T>
@@ -29,7 +27,7 @@ template <typename T>
   // https://github.com/dtolnay/cxx/blob/86cd652c06c5cb4c2e24d3ab555cf707b4ae0883/gen/src/write.rs#L787
   ::kj_rs::repr::PtrLen error;
   KJ_IF_SOME(exception, kj::runCatchingExceptions([&] {
-    if constexpr(kj::isSameType<void, T>()) {
+    if constexpr (kj::isSameType<void, T>()) {
       unwrapNode<T>(kj::mv(node));
       new (result) kj::_::FixVoid<void>();
     } else {
@@ -46,25 +44,29 @@ template <typename T>
 }  // namespace
 
 // TODO(now): Generate boilerplate with a macro.
-extern "C" void promise_into_own_promise_node_void(PromiseVoid* promise, OwnPromiseNode* result) noexcept {
+extern "C" void promise_into_own_promise_node_void(
+    PromiseVoid* promise, OwnPromiseNode* result) noexcept {
   new (result) OwnPromiseNode(kj::_::PromiseNode::from(kj::mv(*promise)));
 };
 extern "C" void promise_drop_in_place_void(PromiseVoid* promise) noexcept {
   // TODO(now): How to propagate exceptions?
   kj::dtor(*promise);
 }
-extern "C" ::kj_rs::repr::PtrLen own_promise_node_unwrap_void(OwnPromiseNode* node, kj::_::FixVoid<void>* result) noexcept {
+extern "C" ::kj_rs::repr::PtrLen own_promise_node_unwrap_void(
+    OwnPromiseNode* node, kj::_::FixVoid<void>* result) noexcept {
   return unwrapImpl<void>(kj::mv(*node), result);
 }
 
-extern "C" void promise_into_own_promise_node_i32(PromiseI32* promise, OwnPromiseNode* result) noexcept {
+extern "C" void promise_into_own_promise_node_i32(
+    PromiseI32* promise, OwnPromiseNode* result) noexcept {
   new (result) OwnPromiseNode(kj::_::PromiseNode::from(kj::mv(*promise)));
 };
 extern "C" void promise_drop_in_place_i32(PromiseI32* promise) noexcept {
   // TODO(now): How to propagate exceptions?
   kj::dtor(*promise);
 }
-extern "C" ::kj_rs::repr::PtrLen own_promise_node_unwrap_i32(OwnPromiseNode* node, kj::_::FixVoid<int32_t>* result) noexcept {
+extern "C" ::kj_rs::repr::PtrLen own_promise_node_unwrap_i32(
+    OwnPromiseNode* node, kj::_::FixVoid<int32_t>* result) noexcept {
   return unwrapImpl<int32_t>(kj::mv(*node), result);
 }
 
