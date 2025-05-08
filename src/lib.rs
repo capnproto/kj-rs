@@ -16,6 +16,8 @@ mod promise;
 pub use promise::KjPromise;
 pub use promise::OwnPromiseNode;
 pub use promise::PromiseFuture;
+pub use promise::new_callbacks_promise_future;
+pub use promise::KjPromiseNodeImpl;
 
 mod waker;
 

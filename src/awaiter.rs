@@ -80,18 +80,20 @@ unsafe impl ExternType for PtrGuardedRustPromiseAwaiter {
 
 use crate::OwnPromiseNode;
 
-pub struct PromiseAwaiter {
+pub struct PromiseAwaiter<Data: std::marker::Unpin> {
     node: Option<OwnPromiseNode>,
+    pub(crate) data: Data,
     awaiter: LazyPinInit<GuardedRustPromiseAwaiter>,
     // Safety: `option_waker` must be declared after `awaiter`, because `awaiter` contains a reference
     // to `option_waker`. This ensures `option_waker` will be dropped after `awaiter`.
     option_waker: OptionWaker,
 }
 
-impl PromiseAwaiter {
-    pub fn new(node: OwnPromiseNode) -> Self {
+impl<Data: std::marker::Unpin> PromiseAwaiter<Data> {
+    pub fn new(node: OwnPromiseNode, data: Data) -> Self {
         PromiseAwaiter {
             node: Some(node),
+            data,
             awaiter: LazyPinInit::uninit(),
             option_waker: OptionWaker::empty(),
         }
@@ -101,7 +103,7 @@ impl PromiseAwaiter {
         // On our first invocation, `node` will be Some, and `get_awaiter` will forward its
         // contents into GuardedRustPromiseAwaiter's constructor. On all subsequent invocations, `node`
         // will be None and the constructor will not run.
-        let node = self.node.take();
+        let node = self.as_mut().node.take();
 
         // Safety: `awaiter` stores `rust_waker_ptr` and uses it to call `wake()`. Note that
         // `awaiter` is `self.awaiter`, which lives before `self.option_waker`. Since struct members
@@ -111,7 +113,7 @@ impl PromiseAwaiter {
         // We pass a mutable pointer to C++. This is safe, because our use of the OptionWaker inside
         // of `std::task::Waker` is synchronized by ensuring we only allow calls to `poll()` on the
         // thread with the Promise's event loop active.
-        let rust_waker_ptr = &mut self.option_waker as *mut OptionWaker;
+        let rust_waker_ptr = (&mut self.as_mut().option_waker) as *mut OptionWaker;
 
         // Safety:
         // 1. We do not implement Unpin for PromiseAwaiter.

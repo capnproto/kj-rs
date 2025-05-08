@@ -4,6 +4,7 @@ use crate::PromiseAwaiter;
 
 use std::marker::PhantomData;
 
+use std::ffi::c_void;
 use std::future::Future;
 use std::pin::Pin;
 use std::task::Context;
@@ -14,7 +15,7 @@ type CxxResult<T> = std::result::Result<T, cxx::Exception>;
 // The inner pointer is never read on Rust's side, so Rust thinks it's dead code.
 #[allow(dead_code)]
 #[repr(transparent)]
-pub struct OwnPromiseNode(*const ());
+pub struct OwnPromiseNode(*mut c_void /* kj::_::PromiseNode* */);
 
 // Safety: KJ Promises are not associated with threads, but with event loops at construction time.
 // Therefore, they can be polled from any thread, as long as that thread has the correct event loop
@@ -25,6 +26,8 @@ pub struct OwnPromiseNode(*const ());
 // correct-executor guarantee.
 unsafe impl Send for OwnPromiseNode {}
 
+// Note: drop is not the only way for OwnPromiseNode to be destroyed.
+// It is forgotten using `MaybeUninit` and its ownership passed over to c++ in `unwrap`.
 impl Drop for OwnPromiseNode {
     fn drop(&mut self) {
         // Safety:
@@ -51,22 +54,24 @@ unsafe impl ExternType for OwnPromiseNode {
 
 pub trait KjPromise: Sized {
     type Output;
+    type Data: std::marker::Unpin;
     fn into_own_promise_node(self) -> OwnPromiseNode;
 
     // Safety: You must guarantee that `node` was previously returned from this same type's
     // `into_own_promise_node()` implementation.
-    unsafe fn unwrap(node: OwnPromiseNode) -> CxxResult<Self::Output>;
+    // node is supposed to be already resolved
+    unsafe fn unwrap(node: OwnPromiseNode, data: &Self::Data) -> CxxResult<Self::Output>;
 }
 
 pub struct PromiseFuture<P: KjPromise> {
-    awaiter: PromiseAwaiter,
+    awaiter: PromiseAwaiter<P::Data>,
     _marker: PhantomData<P>,
 }
 
 impl<P: KjPromise> PromiseFuture<P> {
-    pub fn new(promise: P) -> Self {
+    pub fn new(promise: P, data: P::Data) -> Self {
         PromiseFuture {
-            awaiter: PromiseAwaiter::new(promise.into_own_promise_node()),
+            awaiter: PromiseAwaiter::new(promise.into_own_promise_node(), data),
             _marker: Default::default(),
         }
     }
@@ -78,12 +83,64 @@ impl<P: KjPromise> Future for PromiseFuture<P> {
         // TODO(now): Safety comment.
         let mut awaiter = unsafe { self.map_unchecked_mut(|s| &mut s.awaiter) };
         if awaiter.as_mut().poll(cx) {
-            let node = awaiter.get_awaiter().take_own_promise_node();
+            let node = awaiter.as_mut().get_awaiter().take_own_promise_node();
             // TODO(now): Safety comment.
-            let value = unsafe { P::unwrap(node) };
+            let value = unsafe { P::unwrap(node, &awaiter.data) };
             Poll::Ready(value)
         } else {
             Poll::Pending
         }
     }
 }
+
+type UnwrapCallback =
+    unsafe extern "C" fn(node: *mut c_void, ret: *mut c_void) -> cxx::private::Result;
+
+#[repr(C)]
+pub struct KjPromiseNodeImpl {
+    pub node: *mut c_void,
+    pub unwrap: UnwrapCallback,
+}
+
+pub fn new_callbacks_promise_future<T>(
+    r#impl: KjPromiseNodeImpl,
+) -> impl Future<Output = CxxResult<T>> {
+    PromiseFuture::new(
+        CallbacksFuture {
+            node: r#impl.node,
+            _phantom: PhantomData,
+        },
+        FutureCallbacks {
+            unwrap: r#impl.unwrap,
+        },
+    )
+}
+
+pub struct FutureCallbacks {
+    pub unwrap: UnwrapCallback,
+}
+
+pub struct CallbacksFuture<T> {
+    pub node: *mut c_void,
+    _phantom: PhantomData<T>,
+}
+
+impl<T> KjPromise for CallbacksFuture<T> {
+    type Output = T;
+    type Data = FutureCallbacks;
+
+    fn into_own_promise_node(self) -> OwnPromiseNode {
+        OwnPromiseNode(self.node)
+    }
+
+    unsafe fn unwrap(node: OwnPromiseNode, callbacks: &FutureCallbacks) -> CxxResult<Self::Output> {
+        let mut ret = ::cxx::core::mem::MaybeUninit::<Self::Output>::uninit();
+        (callbacks.unwrap)(
+            node.0,
+            ret.as_mut_ptr().cast::<c_void>(),
+        ).exception()?;
+        Ok(ret.assume_init())
+    }
+}
+
+unsafe impl<T: Send> Send for CallbacksFuture<T> {}
