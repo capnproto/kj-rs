@@ -1,7 +1,8 @@
 #pragma once
 
-#include <kj/async.h>
 #include <rust/cxx.h>
+
+#include <kj/async.h>
 
 namespace kj_rs {
 
@@ -12,10 +13,10 @@ void own_promise_node_drop_in_place(OwnPromiseNode*);
 // https://github.com/dtolnay/cxx/blob/86cd652c06c5cb4c2e24d3ab555cf707b4ae0883/src/cxx.cc#L518
 namespace repr {
 struct PtrLen final {
-  void *ptr;
+  void* ptr;
   std::size_t len;
 };
-} // namespace repr
+}  // namespace repr
 
 }  // namespace kj_rs
 

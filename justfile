@@ -11,6 +11,9 @@ build:
 test:
     bazel test //...
 
+format:
+    clang-format -i src/*.h src/*.c++ examples/kj-rs-demo/src/*.h examples/kj-rs-demo/src/*.c++
+
 cargo-update:
     bazel run //third-party:vendor
     

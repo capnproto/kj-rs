@@ -13,7 +13,7 @@ namespace kj_rs {
 //
 // Serves the same purpose as `cxx-async`'s FuturePollStatus:
 // https://github.com/pcwalton/cxx-async/blob/ac98030dd6e5090d227e7fadca13ec3e4b4e7be7/cxx-async/include/rust/cxx_async.h#L422
-enum class FuturePollStatus: uint8_t {
+enum class FuturePollStatus : uint8_t {
   // `box_future_poll()` returns Pending to indicate it did not write anything to its output
   // parameter.
   Pending,
@@ -27,7 +27,7 @@ enum class FuturePollStatus: uint8_t {
 // A class with space for a `T` or a `rust::String`, whichever is larger.
 template <typename T>
 class BoxFuturePoller {
-public:
+ public:
   BoxFuturePoller() {}
   ~BoxFuturePoller() noexcept(false) {}
 
@@ -51,7 +51,7 @@ public:
     KJ_UNREACHABLE;
   }
 
-private:
+ private:
   T toResult() {
     auto ret = kj::mv(result);
     kj::dtor(result);
@@ -74,7 +74,9 @@ private:
 template <typename F>
 concept Future = requires(F f) {
   typename F::ExceptionOrValue;
-  { f.poll(kj::instance<const KjWaker&>(), kj::instance<typename F::ExceptionOrValue&>()) } -> std::same_as<bool>;
+  {
+    f.poll(kj::instance<const KjWaker&>(), kj::instance<typename F::ExceptionOrValue&>())
+  } -> std::same_as<bool>;
 };
 
 }  // namespace kj_rs

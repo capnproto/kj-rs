@@ -74,7 +74,7 @@ class StaticCastIterator;
 // CRTP mixin for derived class G.
 template <typename G, typename O>
 class LinkedGroup {
-public:
+ public:
   LinkedGroup() = default;
   ~LinkedGroup() noexcept(false) {
     for (auto& object: list) {
@@ -83,7 +83,7 @@ public:
   }
   KJ_DISALLOW_COPY_AND_MOVE(LinkedGroup);
 
-private:
+ private:
   // We'll refer to the `LinkedObject<G, O>` type quite a bit below, so we shadow the class
   // template with our own convenience typedef. But, we need to give LinkedObject friend access to
   // us first.
@@ -98,29 +98,47 @@ private:
   using Iterator = StaticCastIterator<O, O, ListIterator>;
   using ConstIterator = StaticCastIterator<O, const O, ConstListIterator>;
 
-protected:
+ protected:
   // A proxy class representing this LinkedGroup's list of LinkedObjects, if any. Instead of
   // exposing multiple functions on LinkedGroup, we expose one: `linkedObjects()`, and that function
   // returns an object of this proxy class (or the similar ConstLinkedObjectList class below).
   class LinkedObjectList {
-  public:
+   public:
     LinkedObjectList(List& list): list(list) {}
-    Iterator begin() { return list.begin(); }
-    Iterator end() { return list.end(); }
-    decltype(*kj::instance<Iterator>()) front() { return *begin(); }
-    bool empty() const { return list.empty(); }
-  private:
+    Iterator begin() {
+      return list.begin();
+    }
+    Iterator end() {
+      return list.end();
+    }
+    decltype(*kj::instance<Iterator>()) front() {
+      return *begin();
+    }
+    bool empty() const {
+      return list.empty();
+    }
+
+   private:
     List& list;
   };
 
   class ConstLinkedObjectList {
-  public:
+   public:
     ConstLinkedObjectList(const List& list): list(list) {}
-    ConstIterator begin() const { return list.begin(); }
-    ConstIterator end() const { return list.end(); }
-    decltype(*kj::instance<ConstIterator>()) front() const { return *begin(); }
-    bool empty() const { return list.empty(); }
-  private:
+    ConstIterator begin() const {
+      return list.begin();
+    }
+    ConstIterator end() const {
+      return list.end();
+    }
+    decltype(*kj::instance<ConstIterator>()) front() const {
+      return *begin();
+    }
+    bool empty() const {
+      return list.empty();
+    }
+
+   private:
     const List& list;
   };
 
@@ -131,54 +149,68 @@ protected:
     return ConstLinkedObjectList(list);
   }
 
-private:
+ private:
   kj::List<LinkedObject, &LinkedObject::link> list;
 };
 
 // CRTP mixin for derived class O.
 template <typename G, typename O>
 class LinkedObject {
-public:
+ public:
   LinkedObject() = default;
   ~LinkedObject() noexcept(false) {
     invalidateGroup();
   }
   KJ_DISALLOW_COPY_AND_MOVE(LinkedObject);
 
-private:
+ private:
   // We'll refer to the `LinkedGroup<G, O>` type quite a bit below, so we shadow the class template
   // with our own convenience typedef. But, we need to give LinkedGroup friend access to us first.
   friend class LinkedGroup<G, O>;
   using LinkedGroup = LinkedGroup<G, O>;
 
-protected:
+ protected:
   // A proxy class representing this LinkedObject's LinkedGroup, if any. Instead of exposing
   // multiple functions on LinkedObject, we expose one: `linkedGroup()`, and that function returns
   // an object of this proxy class (or the similar ConstLinkedGroupProxy class below).
   class LinkedGroupProxy {
-  public:
+   public:
     LinkedGroupProxy(LinkedObject& self): self(self) {}
-    void set(LinkedGroup& newGroup) { self.setGroup(newGroup); }
-    void set(kj::None) { self.invalidateGroup(); }
-    kj::Maybe<G&> tryGet() { return self.tryGetGroup(); }
-  private:
+    void set(LinkedGroup& newGroup) {
+      self.setGroup(newGroup);
+    }
+    void set(kj::None) {
+      self.invalidateGroup();
+    }
+    kj::Maybe<G&> tryGet() {
+      return self.tryGetGroup();
+    }
+
+   private:
     LinkedObject& self;
   };
 
   // Const version of LinkedGroupProxy, exposing only `tryGet()`.
   class ConstLinkedGroupProxy {
-  public:
+   public:
     ConstLinkedGroupProxy(const LinkedObject& self): self(self) {}
-    kj::Maybe<const G&> tryGet() const { return self.tryGetGroup(); }
-  private:
+    kj::Maybe<const G&> tryGet() const {
+      return self.tryGetGroup();
+    }
+
+   private:
     const LinkedObject& self;
   };
 
   // Provide access to this Object's LinkedGroup, if any.
-  LinkedGroupProxy linkedGroup() { return *this; }
-  ConstLinkedGroupProxy linkedGroup() const { return *this; }
+  LinkedGroupProxy linkedGroup() {
+    return *this;
+  }
+  ConstLinkedGroupProxy linkedGroup() const {
+    return *this;
+  }
 
-private:
+ private:
   void setGroup(LinkedGroup& newGroup) {
     // Invalidate our current group membership, if any.
     KJ_IF_SOME(oldGroup, maybeGroup) {
@@ -235,7 +267,7 @@ private:
 // working, so here we are.
 template <typename T, typename MaybeConstT, typename InnerIterator>
 class StaticCastIterator {
-public:
+ public:
   // Construct an iterator using a default-constructed InnerIterator. In practice, this constructs
   // an end iterator.
   StaticCastIterator() = default;
@@ -270,7 +302,7 @@ public:
     return inner == other.inner;
   }
 
-private:
+ private:
   InnerIterator inner;
 };
 

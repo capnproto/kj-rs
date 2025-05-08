@@ -26,7 +26,7 @@ class FuturePollEvent;
 // concurrently by any thread. Derived class implementations of these functions must handle this,
 // which is why all of the virtual member functions are `const`-qualified.
 class KjWaker {
-public:
+ public:
   // Return a pointer to a new strong ref to a KjWaker. Note that `clone()` may return nullptr,
   // in which case the Rust implementation in waker.rs will treat it as a no-op Waker. Rust
   // immediately wraps this pointer in its own Waker object, which is responsible for later
@@ -47,7 +47,9 @@ public:
   // If this KjWaker implementation has an associated FuturePollEvent, C++ code can request access
   // to it here. The RustPromiseAwaiter class (which helps Rust `.await` KJ Promises) uses this to
   // optimize awaits, when possible.
-  virtual kj::Maybe<FuturePollEvent&> tryGetFuturePollEvent() const { return kj::none; }
+  virtual kj::Maybe<FuturePollEvent&> tryGetFuturePollEvent() const {
+    return kj::none;
+  }
 };
 
 // =======================================================================================
@@ -56,7 +58,7 @@ public:
 class ArcWaker;
 
 class ArcWakerPromiseNode: public kj::_::PromiseNode {
-public:
+ public:
   ArcWakerPromiseNode(kj::Promise<void> promise);
   KJ_DISALLOW_COPY_AND_MOVE(ArcWakerPromiseNode);
 
@@ -65,7 +67,7 @@ public:
   void get(kj::_::ExceptionOrValue& output) noexcept override;
   void tracePromise(kj::_::TraceBuilder& builder, bool stopAtNextEvent) override;
 
-private:
+ private:
   kj::Arc<const ArcWaker> owner = nullptr;
   OwnPromiseNode node;
 
@@ -91,7 +93,7 @@ struct PromiseArcWakerPair {
 class ArcWaker: public kj::AtomicRefcounted,
                 public kj::EnableAddRefToThis<ArcWaker>,
                 public KjWaker {
-public:
+ public:
   // Construct a new promise and ArcWaker promise pair, with the Promise to be scheduled on the
   // event loop associated with `executor`.
   static PromiseArcWakerPair create(const kj::Executor& executor);
@@ -104,7 +106,7 @@ public:
   void wake_by_ref() const override;
   void drop() const override;
 
-private:
+ private:
   kj::Promise<void> getPromise();
 
   ArcWakerPromiseNode node;
@@ -117,7 +119,7 @@ private:
 // LazyArcWaker is intended to live locally on the stack or in a coroutine frame. Trying to
 // `clone()` it will cause it to allocate an ArcWaker for the caller.
 class LazyArcWaker: public KjWaker {
-public:
+ public:
   // Create a new or clone an existing ArcWaker, leak its pointer, and return it. This may be called
   // by any thread.
   const KjWaker* clone() const override;
@@ -149,7 +151,7 @@ public:
   // called, return the promise associated with the cloned ArcWaker.
   kj::Maybe<kj::Promise<void>> reset();
 
-private:
+ private:
   // We store the kj::Executor for the constructing thread so that we can lazily instantiate a
   // CrossThreadPromiseFulfiller from any thread in our `clone()` implementation.
   const kj::Executor& executor = kj::getCurrentThreadExecutor();
@@ -160,7 +162,7 @@ private:
 
   // Incremented by `wake_by_ref()`, which may be called by any thread. All operations use relaxed
   // memory order, because this counter does not guard any memory.
-  mutable std::atomic<uint> wakeCount { 0 };
+  mutable std::atomic<uint> wakeCount{0};
 
   // Incremented by `drop()`, so we can validate that `drop()` is only called once on this object.
   //

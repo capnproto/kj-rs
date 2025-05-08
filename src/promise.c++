@@ -8,10 +8,8 @@ namespace kj_rs {
 // in promise.rs to match the new C++ size/layout.
 //
 // TODO(cleanup): Integrate bindgen into build system to obviate this.
-static_assert(sizeof(OwnPromiseNode) == sizeof(uint64_t) * 1,
-    "OwnPromiseNode size changed");
-static_assert(alignof(OwnPromiseNode) == alignof(uint64_t) * 1,
-    "OwnPromiseNode alignment changed");
+static_assert(sizeof(OwnPromiseNode) == sizeof(uint64_t) * 1, "OwnPromiseNode size changed");
+static_assert(alignof(OwnPromiseNode) == alignof(uint64_t) * 1, "OwnPromiseNode alignment changed");
 
 void own_promise_node_drop_in_place(OwnPromiseNode* node) {
   kj::dtor(*node);

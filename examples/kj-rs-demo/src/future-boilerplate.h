@@ -7,10 +7,11 @@ namespace kj_rs_demo {
 class BoxFutureVoidInfallible;
 
 extern "C" void BoxFutureVoidInfallible_drop_in_place(BoxFutureVoidInfallible* ptr);
-extern "C" ::kj_rs::FuturePollStatus BoxFutureVoidInfallible_poll(BoxFutureVoidInfallible& future, const ::kj_rs::KjWaker& waker, void* result);
+extern "C" ::kj_rs::FuturePollStatus BoxFutureVoidInfallible_poll(
+    BoxFutureVoidInfallible& future, const ::kj_rs::KjWaker& waker, void* result);
 
 class BoxFutureVoidInfallible {
-public:
+ public:
   BoxFutureVoidInfallible(BoxFutureVoidInfallible&& other) noexcept: repr(other.repr) {
     other.repr = {0, 0};
   }
@@ -41,16 +42,18 @@ public:
   // boundary.
   using IsRelocatable = ::std::true_type;
 
-private:
+ private:
   // Match Rust's representation of a `Box<dyn Trait>`.
   ::std::array<std::uintptr_t, 2> repr;
 };
 
-static inline ::kj_rs::LazyFutureAwaiter<BoxFutureVoidInfallible> operator co_await(BoxFutureVoidInfallible& future) {
+static inline ::kj_rs::LazyFutureAwaiter<BoxFutureVoidInfallible> operator co_await(
+    BoxFutureVoidInfallible& future) {
   return ::kj::mv(future);
 }
 
-static inline ::kj_rs::LazyFutureAwaiter<BoxFutureVoidInfallible> operator co_await(BoxFutureVoidInfallible&& future) {
+static inline ::kj_rs::LazyFutureAwaiter<BoxFutureVoidInfallible> operator co_await(
+    BoxFutureVoidInfallible&& future) {
   return ::kj::mv(future);
 }
 
@@ -59,10 +62,11 @@ static inline ::kj_rs::LazyFutureAwaiter<BoxFutureVoidInfallible> operator co_aw
 class BoxFutureVoid;
 
 extern "C" void BoxFutureVoid_drop_in_place(BoxFutureVoid* ptr);
-extern "C" ::kj_rs::FuturePollStatus BoxFutureVoid_poll(BoxFutureVoid& future, const ::kj_rs::KjWaker& waker, void* result);
+extern "C" ::kj_rs::FuturePollStatus BoxFutureVoid_poll(
+    BoxFutureVoid& future, const ::kj_rs::KjWaker& waker, void* result);
 
 class BoxFutureVoid {
-public:
+ public:
   BoxFutureVoid(BoxFutureVoid&& other) noexcept: repr(other.repr) {
     other.repr = {0, 0};
   }
@@ -94,7 +98,7 @@ public:
   // boundary.
   using IsRelocatable = ::std::true_type;
 
-private:
+ private:
   // Match Rust's representation of a `Box<dyn Trait>`.
   ::std::array<::std::uintptr_t, 2> repr;
 };
@@ -112,10 +116,11 @@ static inline ::kj_rs::LazyFutureAwaiter<BoxFutureVoid> operator co_await(BoxFut
 class BoxFutureI32;
 
 extern "C" void BoxFutureI32_drop_in_place(BoxFutureI32* ptr);
-extern "C" ::kj_rs::FuturePollStatus BoxFutureI32_poll(BoxFutureI32& future, const ::kj_rs::KjWaker& waker, void* result);
+extern "C" ::kj_rs::FuturePollStatus BoxFutureI32_poll(
+    BoxFutureI32& future, const ::kj_rs::KjWaker& waker, void* result);
 
 class BoxFutureI32 {
-public:
+ public:
   BoxFutureI32(BoxFutureI32&& other) noexcept: repr(other.repr) {
     other.repr = {0, 0};
   }
@@ -147,7 +152,7 @@ public:
   // boundary.
   using IsRelocatable = ::std::true_type;
 
-private:
+ private:
   // Match Rust's representation of a `Box<dyn Trait>`.
   ::std::array<::std::uintptr_t, 2> repr;
 };
