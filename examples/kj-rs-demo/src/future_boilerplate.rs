@@ -47,21 +47,21 @@ unsafe impl ::cxx::ExternType for BoxFutureVoidInfallible {
 // TODO(now): Safety comment.
 #[doc(hidden)]
 #[allow(non_snake_case)]
-#[export_name = "BoxFutureVoidInfallible_drop_in_place"]
+#[unsafe(export_name = "BoxFutureVoidInfallible_drop_in_place")]
 pub unsafe extern "C" fn BoxFutureVoidInfallible_drop_in_place(ptr: *mut BoxFutureVoidInfallible) {
-    ::std::ptr::drop_in_place(ptr);
+    unsafe { ::std::ptr::drop_in_place(ptr) };
 }
 
 // TODO(now): Safety comment.
 #[doc(hidden)]
 #[allow(non_snake_case)]
-#[export_name = "BoxFutureVoidInfallible_poll"]
+#[unsafe(export_name = "BoxFutureVoidInfallible_poll")]
 pub unsafe extern "C" fn BoxFutureVoidInfallible_poll(
     future: Pin<&mut BoxFutureVoidInfallible>,
     waker: &KjWaker,
     result: *mut (),
 ) -> ::kj_rs::FuturePollStatus {
-    ::kj_rs::box_future_poll::<BoxFutureVoidInfallible, (), Infallible>(future, waker, result)
+    unsafe { ::kj_rs::box_future_poll::<BoxFutureVoidInfallible, (), Infallible>(future, waker, result) }
 }
 
 // ---------------------------------------------------------
@@ -97,20 +97,20 @@ unsafe impl ::cxx::ExternType for BoxFutureVoid {
 
 #[doc(hidden)]
 #[allow(non_snake_case)]
-#[export_name = "BoxFutureVoid_drop_in_place"]
+#[unsafe(export_name = "BoxFutureVoid_drop_in_place")]
 pub unsafe extern "C" fn BoxFutureVoid_drop_in_place(ptr: *mut BoxFutureVoid) {
-    ::std::ptr::drop_in_place(ptr);
+    unsafe { ::std::ptr::drop_in_place(ptr) };
 }
 
 #[doc(hidden)]
 #[allow(non_snake_case)]
-#[export_name = "BoxFutureVoid_poll"]
+#[unsafe(export_name = "BoxFutureVoid_poll")]
 pub unsafe extern "C" fn BoxFutureVoid_poll(
     future: Pin<&mut BoxFutureVoid>,
     waker: &KjWaker,
     result: *mut (),
 ) -> ::kj_rs::FuturePollStatus {
-    ::kj_rs::box_future_poll::<BoxFutureVoid, (), crate::Error>(future, waker, result)
+    unsafe { ::kj_rs::box_future_poll::<BoxFutureVoid, (), crate::Error>(future, waker, result) }
 }
 
 // ---------------------------------------------------------
@@ -139,18 +139,18 @@ unsafe impl ::cxx::ExternType for BoxFutureI32 {
 
 #[doc(hidden)]
 #[allow(non_snake_case)]
-#[export_name = "BoxFutureI32_drop_in_place"]
+#[unsafe(export_name = "BoxFutureI32_drop_in_place")]
 pub unsafe extern "C" fn BoxFutureI32_drop_in_place(ptr: *mut BoxFutureI32) {
-    ::std::ptr::drop_in_place(ptr);
+    unsafe { ::std::ptr::drop_in_place(ptr) };
 }
 
 #[doc(hidden)]
 #[allow(non_snake_case)]
-#[export_name = "BoxFutureI32_poll"]
+#[unsafe(export_name = "BoxFutureI32_poll")]
 pub unsafe extern "C" fn BoxFutureI32_poll(
     future: Pin<&mut BoxFutureI32>,
     waker: &KjWaker,
     result: *mut (),
 ) -> FuturePollStatus {
-    ::kj_rs::box_future_poll::<BoxFutureI32, i32, crate::Error>(future, waker, result)
+    unsafe { ::kj_rs::box_future_poll::<BoxFutureI32, i32, crate::Error>(future, waker, result) }
 }

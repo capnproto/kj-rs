@@ -50,11 +50,11 @@ where
     // let result = panic::catch_unwind(AssertUnwindSafe(move || {
     match future.poll(&mut context) {
         Poll::Ready(Ok(value)) => {
-            std::ptr::write(result as *mut T, value);
+            unsafe { std::ptr::write(result as *mut T, value) };
             FuturePollStatus::Complete
         }
         Poll::Ready(Err(error)) => {
-            std::ptr::write(result as *mut String, error.to_string());
+            unsafe { std::ptr::write(result as *mut String, error.to_string()) };
             FuturePollStatus::Error
         }
         Poll::Pending => FuturePollStatus::Pending,

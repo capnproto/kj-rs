@@ -19,7 +19,7 @@ rust_library(
     name = "kj-rs",
     srcs = glob(["*.rs"]),
     compile_data = glob(["*.h"]),
-    edition = "2021",
+    edition = "2024",
     visibility = ["//visibility:public"],
     deps = [
         ":bridge",
