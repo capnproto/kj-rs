@@ -48,6 +48,15 @@ http_archive(
     url = "https://github.com/cloudflare/workerd-cxx/tarball/ca0033fa22cc96b17ff2ba7bc90a33a9cc6f6042",
 )
 
+# Hedron's Compile Commands Extractor for Bazel
+# https://github.com/hedronvision/bazel-compile-commands-extractor
+bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+git_override(
+    module_name = "hedron_compile_commands",
+    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+    commit = "4f28899228fb3ad0126897876f147ca15026151e",
+)
+
 # Vendored crates
 
 vendored = use_extension("//:build/vendor_extensions.bzl", "vendored")
