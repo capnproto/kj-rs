@@ -135,11 +135,11 @@ impl<T> KjPromise for CallbacksFuture<T> {
 
     unsafe fn unwrap(node: OwnPromiseNode, callbacks: &FutureCallbacks) -> CxxResult<Self::Output> {
         let mut ret = ::cxx::core::mem::MaybeUninit::<Self::Output>::uninit();
-        (callbacks.unwrap)(
+        unsafe { (callbacks.unwrap)(
             node.0,
             ret.as_mut_ptr().cast::<c_void>(),
-        ).exception()?;
-        Ok(ret.assume_init())
+        ).exception() }?;
+        Ok(unsafe { ret.assume_init() })
     }
 }
 

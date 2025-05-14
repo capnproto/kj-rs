@@ -15,7 +15,7 @@ platform(
 rust_library(
     name = "awaitables-rust",
     srcs = glob(["src/**/*.rs"]),
-    edition = "2021",
+    edition = "2024",
     deps = [
         ":rust-bridge",
         # TODO(now): Why isn't :cxx transitive?

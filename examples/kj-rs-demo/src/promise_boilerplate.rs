@@ -68,8 +68,8 @@ impl ::kj_rs::KjPromise for PromiseVoid {
         }
         let mut node = ::cxx::core::mem::MaybeUninit::new(node);
         let mut ret = ::cxx::core::mem::MaybeUninit::<Self::Output>::uninit();
-        own_promise_node_unwrap_void(node.as_mut_ptr(), ret.as_mut_ptr()).exception()?;
-        Ok(ret.assume_init())
+        unsafe { own_promise_node_unwrap_void(node.as_mut_ptr(), ret.as_mut_ptr()).exception() }?;
+        Ok(unsafe { ret.assume_init() })
     }
 }
 
@@ -137,7 +137,7 @@ impl ::kj_rs::KjPromise for PromiseI32 {
         // `own_promise_node_unwrap_*()` consumes `node`, so we must avoid dropping it ourselves.
         let mut node = ::cxx::core::mem::MaybeUninit::new(node);
         let mut ret = ::cxx::core::mem::MaybeUninit::<Self::Output>::uninit();
-        own_promise_node_unwrap_i32(node.as_mut_ptr(), ret.as_mut_ptr()).exception()?;
-        Ok(ret.assume_init())
+        unsafe { own_promise_node_unwrap_i32(node.as_mut_ptr(), ret.as_mut_ptr()).exception() }?;
+        Ok(unsafe { ret.assume_init() })
     }
 }
