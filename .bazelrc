@@ -1,12 +1,18 @@
-common --enable_platform_specific_config
-
-# TODO(now): Switch to CI only?
 build --verbose_failures
 build -c dbg
+
+test --test_timeout=5
+
+## Platform
+
+common --enable_platform_specific_config
 
 # Linux
 
 build:linux --cxxopt=-std=c++20 --host_cxxopt=-std=c++20
+
+# Macos
+
 build:macos --cxxopt=-std=c++20 --host_cxxopt=-std=c++20
 
 # Windows, copied somewhat from workerd
@@ -32,3 +38,18 @@ build:windows --copt='-Wno-unused-command-line-argument' --host_copt='-Wno-unuse
 # MSVC disappointingly sets __cplusplus to 199711L by default. Defining /Zc:__cplusplus makes it
 # set the correct value. We currently don't check __cplusplus, but some dependencies do.
 build:windows --cxxopt='/Zc:__cplusplus' --host_cxxopt='/Zc:__cplusplus'
+
+
+## Sanitizers
+
+build:sanitizer-common --copt="-fsanitize-link-c++-runtime" --linkopt="-fsanitize-link-c++-runtime"
+build:sanitizer-common --copt="-Og"
+build:sanitizer-common --copt="-g" --strip=never
+build:sanitizer-common --copt="-fno-optimize-sibling-calls"
+build:sanitizer-common --copt="-fno-omit-frame-pointer" --copt="-mno-omit-leaf-frame-pointer"
+
+# Address sanitizer (https://github.com/google/sanitizers/wiki/AddressSanitizer)
+build:asan --config=sanitizer-common
+build:asan --copt="-fsanitize=address" --linkopt="-fsanitize=address"
+build:asan --test_env=ASAN_OPTIONS=abort_on_error=true
+build:asan --test_env=KJ_CLEAN_SHUTDOWN=1
