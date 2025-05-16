@@ -15,7 +15,7 @@ format:
     clang-format -i src/*.h src/*.c++ examples/kj-rs-demo/src/*.h examples/kj-rs-demo/src/*.c++
 
 cargo-update:
-    bazel run //third-party:vendor
+    bazel run //deps/rust:crates.io -- --repin
 
 compile-commands:
     bazel run @hedron_compile_commands//:refresh_all

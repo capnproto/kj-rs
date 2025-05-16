@@ -6,6 +6,7 @@
 #     bazel run @@//deps/rust:crates.io
 ###############################################################################
 
+load("@rules_rust//cargo:defs.bzl", "cargo_toml_env_vars")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_binary",
@@ -13,6 +14,11 @@ load(
 )
 
 package(default_visibility = ["//visibility:public"])
+
+cargo_toml_env_vars(
+    name = "cargo_toml_env_vars",
+    src = "Cargo.toml",
+)
 
 rust_library(
     name = "clap",
@@ -41,6 +47,9 @@ rust_library(
     edition = "2021",
     proc_macro_deps = [
         "@crates.io__clap_derive-4.5.32//:clap_derive",
+    ],
+    rustc_env_files = [
+        ":cargo_toml_env_vars",
     ],
     rustc_flags = [
         "--cap-lints=allow",
@@ -124,6 +133,9 @@ rust_binary(
     edition = "2021",
     proc_macro_deps = [
         "@crates.io__clap_derive-4.5.32//:clap_derive",
+    ],
+    rustc_env_files = [
+        ":cargo_toml_env_vars",
     ],
     rustc_flags = [
         "--cap-lints=allow",
