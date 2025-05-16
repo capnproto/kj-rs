@@ -20,7 +20,7 @@ rustfmt:
   bazel run @rules_rust//:rustfmt
 
 cargo-update:
-    bazel run //third-party:vendor
+    bazel run //deps/rust:crates.io -- --repin
 
 compile-commands:
     bazel run @hedron_compile_commands//:refresh_all
