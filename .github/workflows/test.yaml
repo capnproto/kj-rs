@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  bazel:
+  test:
     strategy:
       matrix:
         os: [ 
@@ -26,3 +26,11 @@ jobs:
     - uses: actions/checkout@v4
     - name: Bazel Test
       run: bazel test //...
+  asan:
+    runs-on: ubuntu-24.04 
+    name: asan (linux)
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Bazel Test
+      run: bazel test --config=asan //...
