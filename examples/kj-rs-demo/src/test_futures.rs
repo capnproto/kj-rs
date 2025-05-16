@@ -2,8 +2,8 @@ use std::future;
 use std::future::Future;
 use std::future::IntoFuture;
 
-use std::pin::pin;
 use std::pin::Pin;
+use std::pin::pin;
 
 use std::sync::Arc;
 

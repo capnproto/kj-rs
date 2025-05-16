@@ -8,16 +8,16 @@ use awaiter::WakerRef;
 mod lazy_pin_init;
 
 mod future;
-pub use future::box_future_poll;
 pub use future::BoxFuture;
 pub use future::FuturePollStatus;
+pub use future::box_future_poll;
 
 mod promise;
 pub use promise::KjPromise;
+pub use promise::KjPromiseNodeImpl;
 pub use promise::OwnPromiseNode;
 pub use promise::PromiseFuture;
 pub use promise::new_callbacks_promise_future;
-pub use promise::KjPromiseNodeImpl;
 
 mod waker;
 

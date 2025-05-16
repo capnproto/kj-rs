@@ -17,7 +17,7 @@ rust_library(
     srcs = glob(["src/**/*.rs"]),
     edition = "2024",
     deps = [
-        ":rust-bridge",
+        ":bridge",
         # TODO(now): Why isn't :cxx transitive?
         "@workerd-cxx//:cxx",
         "//:kj-rs",
@@ -25,40 +25,22 @@ rust_library(
 )
 
 rust_cxx_bridge(
-    name = "rust-bridge",
+    name = "bridge",
     src = "src/lib.rs",
-    hdrs = glob(["src/**/*.h"]),
-    include_prefix = "kj-rs-demo",
-    deps = [
-        ":awaitables-include",
-    ],
-)
-
-cc_library(
-    name = "awaitables-include",
     hdrs = [
-        "src/future-boilerplate.h",
-        "src/promise-boilerplate.h",
         "src/test-promises.h",
+        "src/future-boilerplate.h",
     ],
     include_prefix = "kj-rs-demo",
-    linkstatic = select({
-        "@platforms//os:windows": True,
-        "//conditions:default": False,
-    }),
     strip_include_prefix = "src",
     deps = [
         "//:kj-rs",
-        "@capnp-cpp//src/kj:kj",
-        "@capnp-cpp//src/kj:kj-async",
-        # "@workerd-cxx//:cxx_cc",
     ],
 )
 
 cc_library(
-    name = "awaitables-cc",
+    name = "test-promises",
     srcs = [
-        "src/promise-boilerplate.c++",
         "src/test-promises.c++",
     ],
     linkstatic = select({
@@ -67,8 +49,7 @@ cc_library(
     }),
     visibility = ["//visibility:public"],
     deps = [
-        ":awaitables-include",
-        ":rust-bridge",
+        ":bridge",
         "//:kj-rs",
     ],
 )
@@ -80,9 +61,9 @@ cc_test(
         "src/awaitables-cc-test.c++",
     ],
     deps = [
-        ":awaitables-cc",
+        ":test-promises",
         ":awaitables-rust",
-        ":rust-bridge",
+        ":bridge",
         "@capnp-cpp//src/kj:kj-test",
     ],
 )

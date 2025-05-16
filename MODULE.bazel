@@ -42,10 +42,10 @@ http_archive(
 
 http_archive(
     name = "workerd-cxx",
-    sha256 = "b54d7796d5287286e2051fd7fb4f10b48db343bb16f6ba6137a438a71797ad39",
-    strip_prefix = "cloudflare-workerd-cxx-ca0033f",
+    sha256 = "665fd1a784d86406a163f43bd9b5e5e98c0dcda3c504b9b0180623f613c8ef6d",
+    strip_prefix = "cloudflare-workerd-cxx-228214c",
     type = "tgz",
-    url = "https://github.com/cloudflare/workerd-cxx/tarball/ca0033fa22cc96b17ff2ba7bc90a33a9cc6f6042",
+    url = "https://github.com/cloudflare/workerd-cxx/tarball/228214c354ad40f2bcaf595e6063bdda1b85c8a9",
 )
 
 # Hedron's Compile Commands Extractor for Bazel

@@ -11,8 +11,13 @@ build:
 test:
     bazel test //...
 
-format:
+format: rustfmt clang-format
+
+clang-format:
     clang-format -i src/*.h src/*.c++ examples/kj-rs-demo/src/*.h examples/kj-rs-demo/src/*.c++
+
+rustfmt:
+  bazel run @rules_rust//:rustfmt
 
 cargo-update:
     bazel run //third-party:vendor

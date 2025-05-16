@@ -1,3 +1,4 @@
+use ::cxx::core::mem::MaybeUninit;
 use cxx::ExternType;
 
 use crate::PromiseAwaiter;
@@ -6,6 +7,7 @@ use std::marker::PhantomData;
 
 use std::ffi::c_void;
 use std::future::Future;
+use std::mem::ManuallyDrop;
 use std::pin::Pin;
 use std::task::Context;
 use std::task::Poll;
@@ -134,11 +136,11 @@ impl<T> KjPromise for CallbacksFuture<T> {
     }
 
     unsafe fn unwrap(node: OwnPromiseNode, callbacks: &FutureCallbacks) -> CxxResult<Self::Output> {
-        let mut ret = ::cxx::core::mem::MaybeUninit::<Self::Output>::uninit();
-        unsafe { (callbacks.unwrap)(
-            node.0,
-            ret.as_mut_ptr().cast::<c_void>(),
-        ).exception() }?;
+        let mut ret = MaybeUninit::<Self::Output>::uninit();
+        // unwrap will take over node ownership
+        let node = ManuallyDrop::new(node);
+
+        unsafe { (callbacks.unwrap)(node.0, ret.as_mut_ptr().cast::<c_void>()).exception() }?;
         Ok(unsafe { ret.assume_init() })
     }
 }
