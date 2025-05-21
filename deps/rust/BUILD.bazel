@@ -1,5 +1,5 @@
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@rules_rust//crate_universe:defs.bzl", "crates_vendor")
+load("@rules_rust//crate_universe:defs.bzl", "crates_vendor", "crate")
 load("@rules_rust//rust:defs.bzl", "rust_static_library")
 load("@workerd-cxx//third-party:cargo.bzl", WORKERD_CXX_PACKAGES = "PACKAGES")
 
@@ -8,7 +8,9 @@ crates_vendor(
     cargo_lockfile = ":Cargo.Bazel.lock",
     generate_binaries = True,
     mode = "remote",
-    packages = WORKERD_CXX_PACKAGES,
+    packages = WORKERD_CXX_PACKAGES | {
+        "static_assertions": crate.spec(version = "1"),
+    },
 )
 
 # Windows build fixes due to rust libraries missing symbols:

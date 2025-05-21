@@ -162,7 +162,7 @@
   "moduleExtensions": {
     "//:build/vendor_extensions.bzl%vendored": {
       "general": {
-        "bzlTransitiveDigest": "LbV2vKuEWLduERt9dkvvHZLf5Hp4DlFHI5BrEgdNMjQ=",
+        "bzlTransitiveDigest": "AVpwQY7mWMLJMkf2laLtId57uFub+WBNu7Ljvk0CNqM=",
         "usagesDigest": "f0ZCmQENV7L9QUxQxe9Gg6Rm/QoNY548CUzdEY13Afw=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -367,6 +367,18 @@
               "build_file": "@@//deps/rust/crates:BUILD.shlex-1.3.0.bazel"
             }
           },
+          "crates.io__static_assertions-1.1.0": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+            "attributes": {
+              "sha256": "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/static_assertions/1.1.0/download"
+              ],
+              "strip_prefix": "static_assertions-1.1.0",
+              "build_file": "@@//deps/rust/crates:BUILD.static_assertions-1.1.0.bazel"
+            }
+          },
           "crates.io__syn-2.0.100": {
             "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
             "attributes": {
@@ -559,6 +571,7 @@
             "crates.io__quote-1.0.39",
             "crates.io__rustversion-1.0.20",
             "crates.io__scratch-1.0.8",
+            "crates.io__static_assertions-1.1.0",
             "crates.io__syn-2.0.100"
           ],
           "explicitRootModuleDirectDevDeps": [],

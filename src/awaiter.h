@@ -61,7 +61,7 @@ class RustPromiseAwaiter final: public kj::_::Event,
   // store the clone of the Waker ourselves (it's just two pointers) on the C++ side, so the
   // lifetime safety is more obvious. But, storing a reference works for now.
   RustPromiseAwaiter(
-      OptionWaker& optionWaker, OwnPromiseNode node, kj::SourceLocation location = {});
+      OptionWaker& optionWaker, kj::_::OwnPromiseNode node, kj::SourceLocation location = {});
   ~RustPromiseAwaiter() noexcept(false);
   KJ_DISALLOW_COPY_AND_MOVE(RustPromiseAwaiter);
 
@@ -90,7 +90,7 @@ class RustPromiseAwaiter final: public kj::_::Event,
 
   // Release ownership of the OwnPromiseNode. Asserts if called before the Promise is ready; that
   // is, `poll()` must have returned true prior to calling `take_own_promise_node()`.
-  OwnPromiseNode take_own_promise_node();
+  kj::_::OwnPromiseNode take_own_promise_node();
 
  private:
   // The Rust code which instantiates RustPromiseAwaiter does so with a OptionWaker object right
@@ -104,7 +104,7 @@ class RustPromiseAwaiter final: public kj::_::Event,
   kj::Maybe<OptionWaker&> maybeOptionWaker;
 
   kj::UnwindDetector unwindDetector;
-  OwnPromiseNode node;
+  kj::_::OwnPromiseNode node;
 };
 
 // We force Rust to call our `poll()` overloads using this ExecutorGuarded wrapper around the actual
@@ -117,7 +117,7 @@ struct GuardedRustPromiseAwaiter: ExecutorGuarded<RustPromiseAwaiter> {
   bool poll(const WakerRef& waker, const KjWaker* maybeKjWaker) {
     return get().poll(waker, maybeKjWaker);
   }
-  OwnPromiseNode take_own_promise_node() {
+  kj::_::OwnPromiseNode take_own_promise_node() {
     return get().take_own_promise_node();
   }
 };
@@ -125,7 +125,7 @@ struct GuardedRustPromiseAwaiter: ExecutorGuarded<RustPromiseAwaiter> {
 using PtrGuardedRustPromiseAwaiter = GuardedRustPromiseAwaiter*;
 
 void guarded_rust_promise_awaiter_new_in_place(
-    PtrGuardedRustPromiseAwaiter, OptionWaker*, OwnPromiseNode);
+    PtrGuardedRustPromiseAwaiter, OptionWaker*, kj::_::OwnPromiseNode);
 void guarded_rust_promise_awaiter_drop_in_place(PtrGuardedRustPromiseAwaiter);
 
 // =======================================================================================
@@ -144,8 +144,8 @@ void guarded_rust_promise_awaiter_drop_in_place(PtrGuardedRustPromiseAwaiter);
 // `tracePromise()` implementation. This primarily makes the lifetimes easier to manage: our
 // RustPromiseAwaiter LinkedObjects have independent lifetimes from the FuturePollEvent, so we
 // mustn't leave references to them, or their members, lying around in the Coroutine class.
-class FuturePollEvent: public kj::_::Event,
-                       public kj::_::PromiseNode,
+class FuturePollEvent: public kj::_::PromiseNode,
+                       public kj::_::Event,
                        public LinkedGroup<FuturePollEvent, RustPromiseAwaiter> {
  public:
   FuturePollEvent(kj::SourceLocation location = {}): Event(location) {}
@@ -174,7 +174,7 @@ class FuturePollEvent: public kj::_::Event,
   void enterPollScope() noexcept;
   void exitPollScope(kj::Maybe<kj::Promise<void>> maybeLazyArcWakerPromise);
 
-  kj::Maybe<OwnPromiseNode> arcWakerPromise;
+  kj::Maybe<kj::_::OwnPromiseNode> arcWakerPromise;
 };
 
 class FuturePollEvent::PollScope: public LazyArcWaker {
@@ -209,12 +209,10 @@ class FuturePollEvent::PollScope: public LazyArcWaker {
 template <Future F>
 class FutureAwaiter final: public FuturePollEvent {
  public:
-  FutureAwaiter(kj::_::CoroutineBase& coroutine, F future, kj::SourceLocation location = {})
+  FutureAwaiter(F future, kj::SourceLocation location = {})
       : FuturePollEvent(location),
-        coroutine(coroutine),
         future(kj::mv(future)) {}
   ~FutureAwaiter() noexcept(false) {
-    coroutine.clearPromiseNodeForTrace();
   }
   KJ_DISALLOW_COPY_AND_MOVE(FutureAwaiter);
 
@@ -234,14 +232,10 @@ class FutureAwaiter final: public FuturePollEvent {
       }
     }
 
-    // Integrate with our enclosing coroutine's tracing.
-    coroutine.setPromiseNodeForTrace(promiseNodeForTrace);
-
     return true;
   }
 
   auto awaitResumeImpl() {
-    coroutine.clearPromiseNodeForTrace();
     return kj::_::convertToReturn(kj::mv(result));
   }
 
@@ -251,23 +245,31 @@ class FutureAwaiter final: public FuturePollEvent {
   void traceEvent(kj::_::TraceBuilder& builder) override {
     // Just defer to our enclosing Coroutine. It will immediately call our CoAwaitWaker's
     // `tracePromise()` implementation.
-    static_cast<Event&>(coroutine).traceEvent(builder);
+    // static_cast<Event&>(coroutine).traceEvent(builder);
   }
+
+  void onReady(kj::_::Event* event) noexcept override {
+    onReadyEvent.init(event);
+    fire();
+  }
+
+  void get(kj::_::ExceptionOrValue& output) noexcept override {
+    output.as<typename F::Output>() = kj::mv(result);
+  }
+
 
  private:
   kj::Maybe<kj::Own<kj::_::Event>> fire() override {
     if (!awaitSuspendImpl()) {
-      coroutine.armDepthFirst();
+      onReadyEvent.arm();
     }
     return kj::none;
   }
 
-  kj::_::CoroutineBase& coroutine;
-  // HACK: FuturePollEvent implements the PromiseNode interface to integrate with the Coroutine
-  // class' current tracing implementation.
-  OwnPromiseNode promiseNodeForTrace{this};
+  kj::_::OwnPromiseNode promiseNodeForTrace{this};
   typename F::ExceptionOrValue result;
   F future;
+  OnReadyEvent onReadyEvent;
 };
 
 // LazyFutureAwaiter<T> is the outer implementation of our co_await syntax, providing the
@@ -293,7 +295,7 @@ class LazyFutureAwaiter {
     requires(kj::canConvert<U&, kj::_::CoroutineBase&>())
   bool await_suspend(kj::_::stdcoro::coroutine_handle<U> handle) {
     auto future = kj::mv(KJ_ASSERT_NONNULL(impl.template tryGet<F>()));
-    return impl.template init<FutureAwaiter<F>>(handle.promise(), kj::mv(future))
+    return impl.template init<FutureAwaiter<F>>(kj::mv(future))
         .awaitSuspendImpl();
   }
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "src/future.h"
+#include <kj-rs/awaiter.h>
 #include <rust/cxx.h>
 
 #include <kj/async.h>
@@ -46,6 +48,40 @@ struct KjPromiseNodeImpl {
   kj::_::PromiseNode* node;
   repr::UnwrapCallback unwrap;
 };
+
+using PollCallback = kj_rs::FuturePollStatus (*)(void /* RustFuture::fut */* fut, const void* waker, void /* T */* ret);
+
+// ::kj_rs::promise::RustFuture
+struct RustFuture {
+
+  template <typename T>
+  operator kj::Promise<T>() {
+    struct Impl {
+      using ExceptionOrValue = ::kj::_::ExceptionOr<::kj::_::FixVoid<T>>;
+      using Output = ::kj::_::FixVoid<T>;
+
+      bool poll(const ::kj_rs::KjWaker& waker, ExceptionOrValue& output) noexcept {
+        ::kj_rs::BoxFuturePoller<Output> poller;
+        return poller.poll([this, &waker](void* result) {
+          // Safety: `*this` is accepted as `Pin<&mut ...>` in the Rust implementation of
+          // `box_future_poll()`. This is safe because it effectively implements Unpin, being
+          // non-self-referential, so it's fine if we decide to move it later.
+          return fut.poll(&fut.repr, &waker, result);
+        }, output);
+      }
+
+      RustFuture fut;
+    };
+
+    return kj::_::PromiseNode::to<kj::Promise<T>>(
+        kj::_::allocPromise<FutureAwaiter<Impl>>(Impl{.fut = kj::mv(*this)}));
+  }
+
+  ::std::array<std::uintptr_t, 2> repr;
+  PollCallback poll;
+};
+
+static_assert(sizeof(RustFuture) == 3 * sizeof(std::uintptr_t), "incorrest RustFutureType");
 
 #pragma GCC diagnostic pop
 }  // namespace repr

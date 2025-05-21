@@ -1,6 +1,6 @@
 #pragma once
 
-#include "promise.h"
+// #include "promise.h"
 
 #include <kj/async.h>
 #include <kj/mutex.h>
@@ -69,7 +69,7 @@ class ArcWakerPromiseNode: public kj::_::PromiseNode {
 
  private:
   kj::Arc<const ArcWaker> owner = nullptr;
-  OwnPromiseNode node;
+  kj::_::OwnPromiseNode node;
 
   friend class ArcWaker;
 };

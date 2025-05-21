@@ -146,3 +146,4 @@ impl<T> KjPromise for CallbacksFuture<T> {
 }
 
 unsafe impl<T: Send> Send for CallbacksFuture<T> {}
+

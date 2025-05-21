@@ -3,6 +3,7 @@
 #include <kj-rs/waker.h>
 
 #include <kj/debug.h>
+#include <rust/cxx.h>
 
 #include <concepts>
 #include <cstdint>
@@ -73,9 +74,9 @@ class BoxFuturePoller {
 
 template <typename F>
 concept Future = requires(F f) {
-  typename F::ExceptionOrValue;
+  typename F::Output;
   {
-    f.poll(kj::instance<const KjWaker&>(), kj::instance<typename F::ExceptionOrValue&>())
+    f.poll(kj::instance<const KjWaker&>(), kj::instance<typename kj::_::ExceptionOr<typename F::Output>&>())
   } -> std::same_as<bool>;
 };
 

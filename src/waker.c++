@@ -54,7 +54,7 @@ PromiseArcWakerPair ArcWaker::create(const kj::Executor& executor) {
 kj::Promise<void> ArcWaker::getPromise() {
   KJ_REQUIRE(node.owner == nullptr);
   node.owner = addRefToThis();
-  return kj::_::PromiseNode::to<kj::Promise<void>>(OwnPromiseNode(&node));
+  return kj::_::PromiseNode::to<kj::Promise<void>>(kj::_::OwnPromiseNode(&node));
 }
 
 ArcWaker::ArcWaker(kj::Badge<ArcWaker>, kj::PromiseCrossThreadFulfillerPair<void> paf)

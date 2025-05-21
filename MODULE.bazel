@@ -32,6 +32,8 @@ bazel_dep(name = "zlib", version = "1.3.1.bcr.5")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "local_repository")
+
 http_archive(
     name = "capnp-cpp",
     sha256 = "ce4d082c20f2df051d718a3a72fc6029e84c589c87bc93b8cfeb79522577e822",
@@ -40,13 +42,17 @@ http_archive(
     url = "https://github.com/capnproto/capnproto/tarball/fd3001e9ae9c8efaa007518901711ead5584167a",
 )
 
-http_archive(
+local_repository(
     name = "workerd-cxx",
-    sha256 = "665fd1a784d86406a163f43bd9b5e5e98c0dcda3c504b9b0180623f613c8ef6d",
-    strip_prefix = "cloudflare-workerd-cxx-228214c",
-    type = "tgz",
-    url = "https://github.com/cloudflare/workerd-cxx/tarball/228214c354ad40f2bcaf595e6063bdda1b85c8a9",
+    path = "/home/maizatskyi/src/github.com/cloudflare/workerd-cxx",
 )
+# http_archive(
+#     name = "workerd-cxx",
+#     sha256 = "665fd1a784d86406a163f43bd9b5e5e98c0dcda3c504b9b0180623f613c8ef6d",
+#     strip_prefix = "cloudflare-workerd-cxx-228214c",
+#     type = "tgz",
+#     url = "https://github.com/cloudflare/workerd-cxx/tarball/228214c354ad40f2bcaf595e6063bdda1b85c8a9",
+# )
 
 # Hedron's Compile Commands Extractor for Bazel
 # https://github.com/hedronvision/bazel-compile-commands-extractor
@@ -73,5 +79,6 @@ use_repo(
     "crates.io__quote-1.0.39",
     "crates.io__rustversion-1.0.20",
     "crates.io__scratch-1.0.8",
+    "crates.io__static_assertions-1.1.0",
     "crates.io__syn-2.0.100",
 )

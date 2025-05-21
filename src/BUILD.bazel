@@ -25,6 +25,7 @@ rust_library(
         ":bridge",
         ":kj-rs-lib",
         "@workerd-cxx//:cxx",
+        "@crates.io//:static_assertions",
     ],
 )
 
