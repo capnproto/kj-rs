@@ -7,12 +7,19 @@ test --test_timeout=5
 
 common --enable_platform_specific_config
 
+# Linux + Macos
+
+build:unix --@capnp-cpp//src/kj:libdl=True
+test:unix --test_env="LLVM_SYMBOLIZER=/usr/bin/llvm-symbolizer"
+
 # Linux
 
+build:linux --config=unix
 build:linux --cxxopt=-std=c++20 --host_cxxopt=-std=c++20
 
 # Macos
 
+build:macos --config=unix
 build:macos --cxxopt=-std=c++20 --host_cxxopt=-std=c++20
 
 # Windows, copied somewhat from workerd
