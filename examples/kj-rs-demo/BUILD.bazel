@@ -29,7 +29,6 @@ rust_cxx_bridge(
     src = "src/lib.rs",
     hdrs = [
         "src/test-promises.h",
-        "src/future-boilerplate.h",
     ],
     include_prefix = "kj-rs-demo",
     strip_include_prefix = "src",

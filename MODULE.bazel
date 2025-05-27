@@ -42,10 +42,10 @@ http_archive(
 
 http_archive(
     name = "workerd-cxx",
-    sha256 = "665fd1a784d86406a163f43bd9b5e5e98c0dcda3c504b9b0180623f613c8ef6d",
-    strip_prefix = "cloudflare-workerd-cxx-228214c",
+    sha256 = "624f237b7e2d7fcfd6e71d9cf1982b03034c33fb0add0dc1076c728ec7cf7d9b",
+    strip_prefix = "cloudflare-workerd-cxx-3fd6661",
     type = "tgz",
-    url = "https://github.com/cloudflare/workerd-cxx/tarball/228214c354ad40f2bcaf595e6063bdda1b85c8a9",
+    url = "https://github.com/cloudflare/workerd-cxx/tarball/3fd6661daa46a25af51c783a3e7939cf148fca32",
 )
 
 # Hedron's Compile Commands Extractor for Bazel
@@ -73,5 +73,6 @@ use_repo(
     "crates.io__quote-1.0.39",
     "crates.io__rustversion-1.0.20",
     "crates.io__scratch-1.0.8",
+    "crates.io__static_assertions-1.1.0",
     "crates.io__syn-2.0.100",
 )

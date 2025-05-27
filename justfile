@@ -11,6 +11,9 @@ build:
 test:
     bazel test //...
 
+asan:
+    bazel test --config=asan //...
+
 format: rustfmt clang-format
 
 clang-format:

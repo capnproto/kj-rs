@@ -1,32 +1,25 @@
+use crate::Error;
+use crate::Result;
+use crate::ffi::CloningAction;
+use crate::ffi::WakingAction;
 use std::future;
 use std::future::Future;
 use std::future::IntoFuture;
-
 use std::pin::Pin;
 use std::pin::pin;
-
 use std::sync::Arc;
-
 use std::task::Context;
 use std::task::Poll;
 use std::task::Wake;
 use std::task::Waker;
 
-use crate::Error;
-
-use crate::BoxFutureI32;
-use crate::BoxFutureVoid;
-use crate::BoxFutureVoidInfallible;
-
-pub fn new_pending_future_void() -> BoxFutureVoidInfallible {
-    Box::pin(async { Ok(std::future::pending().await) }).into()
-}
-pub fn new_ready_future_void() -> BoxFutureVoidInfallible {
-    Box::pin(async { Ok(std::future::ready(()).await) }).into()
+pub async fn new_pending_future_void() {
+    std::future::pending().await
 }
 
-use crate::ffi::CloningAction;
-use crate::ffi::WakingAction;
+pub async fn new_ready_future_void() {
+    std::future::ready(()).await
+}
 
 struct WakingFuture {
     done: bool,
@@ -101,11 +94,8 @@ impl Future for WakingFuture {
     }
 }
 
-pub fn new_waking_future_void(
-    cloning_action: CloningAction,
-    waking_action: WakingAction,
-) -> BoxFutureVoidInfallible {
-    Box::pin(async move { Ok(WakingFuture::new(cloning_action, waking_action).await) }).into()
+pub async fn new_waking_future_void(cloning_action: CloningAction, waking_action: WakingAction) {
+    WakingFuture::new(cloning_action, waking_action).await
 }
 
 struct ThreadedDelayFuture {
@@ -141,20 +131,18 @@ impl Future for ThreadedDelayFuture {
     }
 }
 
-pub fn new_threaded_delay_future_void() -> BoxFutureVoidInfallible {
-    Box::pin(async { Ok(ThreadedDelayFuture::new().await) }).into()
+pub async fn new_threaded_delay_future_void() {
+    ThreadedDelayFuture::new().await
 }
 
-pub fn new_layered_ready_future_void() -> BoxFutureVoid {
-    Box::pin(async {
-        crate::ffi::new_ready_promise_void()
-            .await
-            .map_err(Error::other)?;
-        crate::ffi::new_coroutine_promise_void()
-            .await
-            .map_err(Error::other)
-    })
-    .into()
+pub async fn new_layered_ready_future_void() -> Result<()> {
+    crate::ffi::new_ready_promise_void()
+        .await
+        .map_err(Error::other)?;
+    crate::ffi::new_coroutine_promise_void()
+        .await
+        .map_err(Error::other)?;
+    Ok(())
 }
 
 // From example at https://doc.rust-lang.org/std/future/fn.poll_fn.html#capturing-a-pinned-state
@@ -178,19 +166,16 @@ fn naive_select<T>(
 }
 
 // A Future which polls multiple OwnPromiseNodes at once.
-pub fn new_naive_select_future_void() -> BoxFutureVoid {
-    Box::pin(async {
+pub async fn new_naive_select_future_void() -> Result<()> {
+    naive_select(
+        crate::ffi::new_pending_promise_void().into_future(),
         naive_select(
-            crate::ffi::new_pending_promise_void().into_future(),
-            naive_select(
-                crate::ffi::new_coroutine_promise_void().into_future(),
-                crate::ffi::new_coroutine_promise_void().into_future(),
-            ),
-        )
-        .await
-        .map_err(Error::other)
-    })
-    .into()
+            crate::ffi::new_coroutine_promise_void().into_future(),
+            crate::ffi::new_coroutine_promise_void().into_future(),
+        ),
+    )
+    .await
+    .map_err(Error::other)
 }
 
 struct WrappedWaker(Waker);
@@ -207,52 +192,42 @@ impl Wake for WrappedWaker {
 }
 
 // Return a Future which awaits a KJ promise using a custom Waker implementation, opaque to KJ.
-pub fn new_wrapped_waker_future_void() -> BoxFutureVoid {
-    Box::pin(async {
-        let mut promise = pin!(crate::ffi::new_coroutine_promise_void().into_future());
-        future::poll_fn(move |cx| {
-            let waker = cx.waker().clone();
-            let waker = Arc::new(WrappedWaker(waker)).into();
-            let mut cx = Context::from_waker(&waker);
-            if let Poll::Ready(r) = promise.as_mut().poll(&mut cx) {
-                Poll::Ready(r)
-            } else {
-                Poll::Pending
-            }
-        })
+pub async fn new_wrapped_waker_future_void() -> Result<()> {
+    let mut promise = pin!(crate::ffi::new_coroutine_promise_void().into_future());
+    future::poll_fn(move |cx| {
+        let waker = cx.waker().clone();
+        let waker = Arc::new(WrappedWaker(waker)).into();
+        let mut cx = Context::from_waker(&waker);
+        if let Poll::Ready(r) = promise.as_mut().poll(&mut cx) {
+            Poll::Ready(r)
+        } else {
+            Poll::Pending
+        }
+    })
+    .await
+    .map_err(Error::other)
+}
+
+pub async fn new_errored_future_void() -> Result<()> {
+    Err(std::io::Error::new(std::io::ErrorKind::Other, "test error"))
+}
+
+pub async fn new_error_handling_future_void_infallible() {
+    let err = crate::ffi::new_errored_promise_void()
         .await
-        .map_err(Error::other)
-    })
-    .into()
-}
-
-pub fn new_errored_future_void() -> BoxFutureVoid {
-    Box::pin(std::future::ready(Err(Error::other("test error")))).into()
-}
-
-pub fn new_error_handling_future_void_infallible() -> BoxFutureVoidInfallible {
-    Box::pin(async {
-        let err = crate::ffi::new_errored_promise_void()
-            .await
-            .expect_err("should throw");
-        assert!(err.what().contains("test error"));
-        Ok(())
-    })
-    .into()
+        .expect_err("should throw");
+    assert!(err.what().contains("test error"));
 }
 
 // TODO(now): Rename to new_promise_i32_awaiting_future_void
-pub fn new_awaiting_future_i32() -> BoxFutureVoidInfallible {
-    Box::pin(async {
-        let value = crate::ffi::new_ready_promise_i32(123)
-            .await
-            .expect("should not throw");
-        assert_eq!(value, 123);
-        Ok(())
-    })
-    .into()
+pub async fn new_awaiting_future_i32() -> Result<()> {
+    let value = crate::ffi::new_ready_promise_i32(123)
+        .await
+        .expect("should not throw");
+    assert_eq!(value, 123);
+    Ok(())
 }
 
-pub fn new_ready_future_i32(value: i32) -> BoxFutureI32 {
-    Box::pin(std::future::ready(Ok(value))).into()
+pub async fn new_ready_future_i32(value: i32) -> Result<i32> {
+    Ok(value)
 }
