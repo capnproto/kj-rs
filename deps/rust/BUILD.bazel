@@ -9,6 +9,7 @@ crates_vendor(
     generate_binaries = True,
     mode = "remote",
     packages = WORKERD_CXX_PACKAGES,
+    tags = ["manual"],
 )
 
 # Windows build fixes due to rust libraries missing symbols:
