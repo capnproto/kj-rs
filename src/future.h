@@ -36,16 +36,16 @@ class FuturePoller {
   // `rust::String` (error result) may be written, then propagate the result or error to `output`
   // depending on the return value of `pollFunc()`.
   template <typename F>
-  bool poll(F&& pollFunc, kj::_::ExceptionOr<T>& output) {
+  void poll(F&& pollFunc, kj::_::ExceptionOr<T>& output) {
     switch (pollFunc(&result)) {
       case ::kj_rs::FuturePollStatus::Pending:
-        return false;
+        return;
       case ::kj_rs::FuturePollStatus::Complete:
         output.value = toResult();
-        return true;
+        return;
       case ::kj_rs::FuturePollStatus::Error: {
         output.addException(toException());
-        return true;
+        return;
       }
     }
 
@@ -107,14 +107,10 @@ struct RustFuture {
 
       KJ_DISALLOW_COPY(Impl);
 
-      bool poll(const ::kj_rs::KjWaker& waker, ExceptionOrValue& output) noexcept {
+      void poll(const ::kj_rs::KjWaker& waker, ExceptionOrValue& output) noexcept {
         ::kj_rs::FuturePoller<Output> poller;
-        return poller.poll([this, &waker](void* result) {
-          // Safety: `*this` is accepted as `Pin<&mut ...>` in the Rust implementation of
-          // `box_future_poll()`. This is safe because it effectively implements Unpin, being
-          // non-self-referential, so it's fine if we decide to move it later.
-          return fut.poll(&fut, &waker, result);
-        }, output);
+        poller.poll(
+            [this, &waker](void* result) { return fut.poll(&fut, &waker, result); }, output);
       }
 
       RustFuture fut;

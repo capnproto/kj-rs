@@ -11,6 +11,14 @@
 namespace kj_rs_demo {
 namespace {
 
+KJ_TEST("polling pending future") {
+  kj::EventLoop loop;
+  kj::WaitScope waitScope(loop);
+
+  kj::Promise<void> promise = new_pending_future_void();
+  KJ_EXPECT(!promise.poll(waitScope));
+}
+
 KJ_TEST("C++ KJ coroutine can co_await rust ready void future") {
   kj::EventLoop loop;
   kj::WaitScope waitScope(loop);
@@ -18,7 +26,7 @@ KJ_TEST("C++ KJ coroutine can co_await rust ready void future") {
   []() -> kj::Promise<void> { co_await new_ready_future_void(); }().wait(waitScope);
 }
 
-KJ_TEST("BoxFutureAwaiter: C++ KJ coroutines can co_await Rust Futures") {
+KJ_TEST("C++ KJ coroutines can co_await Rust Futures") {
   kj::EventLoop loop;
   kj::WaitScope waitScope(loop);
 
@@ -26,6 +34,34 @@ KJ_TEST("BoxFutureAwaiter: C++ KJ coroutines can co_await Rust Futures") {
     co_await new_ready_future_void();
     co_await new_waking_future_void(CloningAction::None, WakingAction::WakeByRefSameThread);
   }().wait(waitScope);
+}
+
+KJ_TEST("c++ can receive synchronous wakes during poll()") {
+  kj::EventLoop loop;
+  kj::WaitScope waitScope(loop);
+
+  struct Actions {
+    CloningAction cloningAction;
+    WakingAction wakingAction;
+  };
+
+  for (auto testCase: std::initializer_list<Actions>{
+         {CloningAction::None, WakingAction::WakeByRefSameThread},
+         {CloningAction::None, WakingAction::WakeByRefBackgroundThread},
+         {CloningAction::CloneSameThread, WakingAction::WakeByRefSameThread},
+         {CloningAction::CloneSameThread, WakingAction::WakeByRefBackgroundThread},
+         {CloningAction::CloneBackgroundThread, WakingAction::WakeByRefSameThread},
+         {CloningAction::CloneBackgroundThread, WakingAction::WakeByRefBackgroundThread},
+         {CloningAction::CloneSameThread, WakingAction::WakeSameThread},
+         {CloningAction::CloneSameThread, WakingAction::WakeBackgroundThread},
+         {CloningAction::CloneBackgroundThread, WakingAction::WakeSameThread},
+         {CloningAction::CloneBackgroundThread, WakingAction::WakeBackgroundThread},
+         {CloningAction::WakeByRefThenCloneSameThread, WakingAction::WakeSameThread},
+       }) {
+    auto waking = new_waking_future_void(testCase.cloningAction, testCase.wakingAction);
+    KJ_EXPECT(waking.poll(waitScope));
+    waking.wait(waitScope);
+  }
 }
 
 KJ_TEST("RustPromiseAwaiter: Rust can .await KJ promises under a co_await") {
@@ -101,6 +137,17 @@ KJ_TEST("C++ can await BoxFuture<i32>") {
 
   []() -> kj::Promise<void> { KJ_EXPECT(co_await new_ready_future_i32(123) == 123); }().wait(
            waitScope);
+}
+
+KJ_TEST("C++ can receive asynchronous wakes after poll()") {
+  kj::EventLoop loop;
+  kj::WaitScope waitScope(loop);
+
+  auto promise = new_threaded_delay_future_void();
+  // It's not ready yet.
+  KJ_EXPECT(!promise.poll(waitScope));
+  // But later it is.
+  promise.wait(waitScope);
 }
 
 // TODO(now): More test cases.

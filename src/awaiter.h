@@ -155,9 +155,6 @@ class FuturePollEvent: public kj::_::PromiseNode,
   // HACK: We only implement this interface for `tracePromise()`, which is the only function
   // CoroutineBase uses on its `promiseNodeForTrace` reference.
 
-  void destroy() override {}  // No-op because we are allocated inside the coroutine frame
-  void onReady(kj::_::Event* event) noexcept override;
-  void get(kj::_::ExceptionOrValue& output) noexcept override;
   void tracePromise(kj::_::TraceBuilder& builder, bool stopAtNextEvent) override;
 
  protected:
@@ -199,7 +196,7 @@ class FuturePollEvent::PollScope: public LazyArcWaker {
 };
 
 // =======================================================================================
-// FutureAwaiter, LazyFutureAwaiter, and operator co_await implementations
+// FutureAwaiter
 
 template <typename F>
 concept Future = requires(F f) {
@@ -207,7 +204,7 @@ concept Future = requires(F f) {
   {
     f.poll(kj::instance<const KjWaker&>(),
         kj::instance<typename ::kj::_::ExceptionOr<typename F::Output>&>())
-  } -> std::same_as<bool>;
+  } -> std::same_as<void>;
 };
 
 // FutureAwaiter<T> is a Future poll() Event, and is the inner implementation of our co_await
@@ -223,10 +220,6 @@ class FutureAwaiter final: public FuturePollEvent {
   ~FutureAwaiter() noexcept(false) {}
   KJ_DISALLOW_COPY_AND_MOVE(FutureAwaiter);
 
-  auto awaitResumeImpl() {
-    return kj::_::convertToReturn(kj::mv(result));
-  }
-
   // -------------------------------------------------------
   // Event API
 
@@ -234,11 +227,6 @@ class FutureAwaiter final: public FuturePollEvent {
     // Just defer to our enclosing Coroutine. It will immediately call our CoAwaitWaker's
     // `tracePromise()` implementation.
     onReadyEvent.traceEvent(builder);
-  }
-
-  void onReady(kj::_::Event* event) noexcept override {
-    onReadyEvent.init(event);
-    poll();
   }
 
   void get(kj::_::ExceptionOrValue& output) noexcept override {
@@ -249,6 +237,11 @@ class FutureAwaiter final: public FuturePollEvent {
     freePromise(this);
   }
 
+  void onReady(kj::_::Event* event) noexcept override {
+    onReadyEvent.init(event);
+    poll();
+  }
+
  private:
   kj::Maybe<kj::Own<kj::_::Event>> fire() override {
     poll();
@@ -257,6 +250,8 @@ class FutureAwaiter final: public FuturePollEvent {
 
   // Poll the wrapped Future and arm the event if future is ready.
   void poll() {
+    if (isDone()) return;
+
     // TODO(perf): Check if we already have an ArcWaker from a previous suspension and give it to
     //   LazyArcWaker for cloning if we have the last reference to it at this point. This could save
     //   memory allocations, but would depend on making XThreadFulfiller and XThreadPaf resettable
@@ -265,11 +260,15 @@ class FutureAwaiter final: public FuturePollEvent {
     {
       PollScope pollScope(*this);
 
-      if (future.poll(pollScope, result)) {
-        // Future is ready, we're done.
+      future.poll(pollScope, result);
+      if (isDone()) {
         onReadyEvent.arm();
       }
     }
+  }
+
+  bool isDone() const {
+    return result.value != kj::none || result.exception != kj::none;
   }
 
   typename F::ExceptionOrValue result;
