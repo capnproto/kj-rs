@@ -302,6 +302,7 @@ _NORMAL_DEPENDENCIES = {
             "proc-macro2": Label("@crates.io//:proc-macro2-1.0.94"),
             "quote": Label("@crates.io//:quote-1.0.39"),
             "scratch": Label("@crates.io//:scratch-1.0.8"),
+            "static_assertions": Label("@crates.io//:static_assertions-1.1.0"),
             "syn": Label("@crates.io//:syn-2.0.100"),
         },
     },
@@ -586,6 +587,16 @@ def crate_repositories():
 
     maybe(
         http_archive,
+        name = "crates.io__static_assertions-1.1.0",
+        sha256 = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f",
+        type = "tar.gz",
+        urls = ["https://static.crates.io/crates/static_assertions/1.1.0/download"],
+        strip_prefix = "static_assertions-1.1.0",
+        build_file = Label("//deps/rust/crates:BUILD.static_assertions-1.1.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
         name = "crates.io__syn-2.0.100",
         sha256 = "b09a44accad81e1ba1cd74a32461ba89dee89095ba17b32f5d03683b1b1fc2a0",
         type = "tar.gz",
@@ -743,5 +754,6 @@ def crate_repositories():
         struct(repo = "crates.io__quote-1.0.39", is_dev_dep = False),
         struct(repo = "crates.io__rustversion-1.0.20", is_dev_dep = False),
         struct(repo = "crates.io__scratch-1.0.8", is_dev_dep = False),
+        struct(repo = "crates.io__static_assertions-1.1.0", is_dev_dep = False),
         struct(repo = "crates.io__syn-2.0.100", is_dev_dep = False),
     ]

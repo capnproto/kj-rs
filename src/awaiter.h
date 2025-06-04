@@ -1,7 +1,6 @@
 #pragma once
 
 #include <kj-rs/executor-guarded.h>
-#include <kj-rs/future.h>
 #include <kj-rs/linked-group.h>
 #include <kj-rs/waker.h>
 
@@ -144,8 +143,8 @@ void guarded_rust_promise_awaiter_drop_in_place(PtrGuardedRustPromiseAwaiter);
 // `tracePromise()` implementation. This primarily makes the lifetimes easier to manage: our
 // RustPromiseAwaiter LinkedObjects have independent lifetimes from the FuturePollEvent, so we
 // mustn't leave references to them, or their members, lying around in the Coroutine class.
-class FuturePollEvent: public kj::_::Event,
-                       public kj::_::PromiseNode,
+class FuturePollEvent: public kj::_::PromiseNode,
+                       public kj::_::Event,
                        public LinkedGroup<FuturePollEvent, RustPromiseAwaiter> {
  public:
   FuturePollEvent(kj::SourceLocation location = {}): Event(location) {}
@@ -156,9 +155,6 @@ class FuturePollEvent: public kj::_::Event,
   // HACK: We only implement this interface for `tracePromise()`, which is the only function
   // CoroutineBase uses on its `promiseNodeForTrace` reference.
 
-  void destroy() override {}  // No-op because we are allocated inside the coroutine frame
-  void onReady(kj::_::Event* event) noexcept override;
-  void get(kj::_::ExceptionOrValue& output) noexcept override;
   void tracePromise(kj::_::TraceBuilder& builder, bool stopAtNextEvent) override;
 
  protected:
@@ -200,7 +196,16 @@ class FuturePollEvent::PollScope: public LazyArcWaker {
 };
 
 // =======================================================================================
-// FutureAwaiter, LazyFutureAwaiter, and operator co_await implementations
+// FutureAwaiter
+
+template <typename F>
+concept Future = requires(F f) {
+  typename F::Output;
+  {
+    f.poll(kj::instance<const KjWaker&>(),
+        kj::instance<typename ::kj::_::ExceptionOr<typename F::Output>&>())
+  } -> std::same_as<void>;
+};
 
 // FutureAwaiter<T> is a Future poll() Event, and is the inner implementation of our co_await
 // syntax. It wraps a Future and captures a reference to its enclosing KJ coroutine, arranging
@@ -209,17 +214,44 @@ class FuturePollEvent::PollScope: public LazyArcWaker {
 template <Future F>
 class FutureAwaiter final: public FuturePollEvent {
  public:
-  FutureAwaiter(kj::_::CoroutineBase& coroutine, F future, kj::SourceLocation location = {})
+  FutureAwaiter(F future, kj::SourceLocation location = {})
       : FuturePollEvent(location),
-        coroutine(coroutine),
         future(kj::mv(future)) {}
-  ~FutureAwaiter() noexcept(false) {
-    coroutine.clearPromiseNodeForTrace();
-  }
+  ~FutureAwaiter() noexcept(false) {}
   KJ_DISALLOW_COPY_AND_MOVE(FutureAwaiter);
 
-  // Poll the wrapped Future, returning false if we should _not_ suspend, true if we should suspend.
-  bool awaitSuspendImpl() {
+  // -------------------------------------------------------
+  // Event API
+
+  void traceEvent(kj::_::TraceBuilder& builder) override {
+    // Just defer to our enclosing Coroutine. It will immediately call our CoAwaitWaker's
+    // `tracePromise()` implementation.
+    onReadyEvent.traceEvent(builder);
+  }
+
+  void get(kj::_::ExceptionOrValue& output) noexcept override {
+    output.as<typename F::Output>() = kj::mv(result);
+  }
+
+  void destroy() override {
+    freePromise(this);
+  }
+
+  void onReady(kj::_::Event* event) noexcept override {
+    onReadyEvent.init(event);
+    poll();
+  }
+
+ private:
+  kj::Maybe<kj::Own<kj::_::Event>> fire() override {
+    poll();
+    return kj::none;
+  }
+
+  // Poll the wrapped Future and arm the event if future is ready.
+  void poll() {
+    if (isDone()) return;
+
     // TODO(perf): Check if we already have an ArcWaker from a previous suspension and give it to
     //   LazyArcWaker for cloning if we have the last reference to it at this point. This could save
     //   memory allocations, but would depend on making XThreadFulfiller and XThreadPaf resettable
@@ -228,82 +260,20 @@ class FutureAwaiter final: public FuturePollEvent {
     {
       PollScope pollScope(*this);
 
-      if (future.poll(pollScope, result)) {
-        // Future is ready, we're done.
-        return false;
+      future.poll(pollScope, result);
+      if (isDone()) {
+        onReadyEvent.arm();
       }
     }
-
-    // Integrate with our enclosing coroutine's tracing.
-    coroutine.setPromiseNodeForTrace(promiseNodeForTrace);
-
-    return true;
   }
 
-  auto awaitResumeImpl() {
-    coroutine.clearPromiseNodeForTrace();
-    return kj::_::convertToReturn(kj::mv(result));
+  bool isDone() const {
+    return result.value != kj::none || result.exception != kj::none;
   }
 
-  // -------------------------------------------------------
-  // Event API
-
-  void traceEvent(kj::_::TraceBuilder& builder) override {
-    // Just defer to our enclosing Coroutine. It will immediately call our CoAwaitWaker's
-    // `tracePromise()` implementation.
-    static_cast<Event&>(coroutine).traceEvent(builder);
-  }
-
- private:
-  kj::Maybe<kj::Own<kj::_::Event>> fire() override {
-    if (!awaitSuspendImpl()) {
-      coroutine.armDepthFirst();
-    }
-    return kj::none;
-  }
-
-  kj::_::CoroutineBase& coroutine;
-  // HACK: FuturePollEvent implements the PromiseNode interface to integrate with the Coroutine
-  // class' current tracing implementation.
-  OwnPromiseNode promiseNodeForTrace{this};
   typename F::ExceptionOrValue result;
   F future;
-};
-
-// LazyFutureAwaiter<T> is the outer implementation of our co_await syntax, providing the
-// await_ready(), await_suspend(), await_resume() facade expected by the compiler.
-//
-// LazyFutureAwaiter is a type with two stages. At first, it merely wraps a Future. Once
-// its await_suspend() function is called, it transitions to wrap a FutureAwaiter<T>, our inner
-// awaiter implementation. We do this because we don't get a reference to our enclosing
-// coroutine until await_suspend() is called, and our awaiter implementation is greatly simplified
-// if we can avoid using a Maybe. So, we defer the real awaiter instantiation to await_suspend().
-template <Future F>
-class LazyFutureAwaiter {
- public:
-  LazyFutureAwaiter(F&& future): impl(kj::mv(future)) {}
-
-  // Always return false, so our await_suspend() is guaranteed to be called.
-  bool await_ready() const {
-    return false;
-  }
-
-  // Initialize our wrapped Awaiter and forward to `FutureAwaiter<T>::awaitSuspendImpl()`.
-  template <typename U>
-    requires(kj::canConvert<U&, kj::_::CoroutineBase&>())
-  bool await_suspend(kj::_::stdcoro::coroutine_handle<U> handle) {
-    auto future = kj::mv(KJ_ASSERT_NONNULL(impl.template tryGet<F>()));
-    return impl.template init<FutureAwaiter<F>>(handle.promise(), kj::mv(future))
-        .awaitSuspendImpl();
-  }
-
-  // Forward to our wrapped `FutureAwaiter<T>::awaitResumeImpl()`.
-  auto await_resume() {
-    return KJ_ASSERT_NONNULL(impl.template tryGet<FutureAwaiter<F>>()).awaitResumeImpl();
-  }
-
- private:
-  kj::OneOf<F, FutureAwaiter<F>> impl;
+  OnReadyEvent onReadyEvent;
 };
 
 }  // namespace kj_rs

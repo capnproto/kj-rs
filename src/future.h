@@ -1,5 +1,6 @@
 #pragma once
 
+#include <kj-rs/awaiter.h>
 #include <kj-rs/waker.h>
 
 #include <kj/debug.h>
@@ -26,25 +27,25 @@ enum class FuturePollStatus : uint8_t {
 
 // A class with space for a `T` or a `rust::String`, whichever is larger.
 template <typename T>
-class BoxFuturePoller {
+class FuturePoller {
  public:
-  BoxFuturePoller() {}
-  ~BoxFuturePoller() noexcept(false) {}
+  FuturePoller() {}
+  ~FuturePoller() noexcept(false) {}
 
   // Call `pollFunc()` with a pointer to space to which a `T` (successful result) or a
   // `rust::String` (error result) may be written, then propagate the result or error to `output`
   // depending on the return value of `pollFunc()`.
   template <typename F>
-  bool poll(F&& pollFunc, kj::_::ExceptionOr<T>& output) {
+  void poll(F&& pollFunc, kj::_::ExceptionOr<T>& output) {
     switch (pollFunc(&result)) {
       case ::kj_rs::FuturePollStatus::Pending:
-        return false;
+        return;
       case ::kj_rs::FuturePollStatus::Complete:
         output.value = toResult();
-        return true;
+        return;
       case ::kj_rs::FuturePollStatus::Error: {
         output.addException(toException());
-        return true;
+        return;
       }
     }
 
@@ -71,12 +72,60 @@ class BoxFuturePoller {
   };
 };
 
-template <typename F>
-concept Future = requires(F f) {
-  typename F::ExceptionOrValue;
-  {
-    f.poll(kj::instance<const KjWaker&>(), kj::instance<typename F::ExceptionOrValue&>())
-  } -> std::same_as<bool>;
+// These types are shared with Rust code.
+namespace repr {
+
+// ::kj_rs::repr::PollCallback
+using PollCallback = kj_rs::FuturePollStatus (*)(
+    void /* RustFuture::fut */* fut, const void* waker, void /* T */* ret);
+
+// ::kj_rs::repr::DropCallback
+using DropCallback = void (*)(void /* RustFuture::fut */* fut);
+
+// ::kj_rs::repr::RustFuture & ::kj_rs::promise::RustInfallibleFuture since they both have the
+// same layout.
+struct RustFuture {
+
+  template <typename T>
+  operator kj::Promise<T>() {
+    struct Impl {
+      using ExceptionOrValue = ::kj::_::ExceptionOr<::kj::_::FixVoid<T>>;
+      using Output = ::kj::_::FixVoid<T>;
+
+      Impl(RustFuture fut): fut(fut) {}
+
+      ~Impl() {
+        if (fut.repr != std::array<std::uintptr_t, 2>{}) {
+          fut.drop(&fut);
+        }
+      }
+      Impl(Impl&& other) {
+        KJ_ASSERT(other.fut.repr != (std::array<std::uintptr_t, 2>{}));
+        fut = other.fut;
+        other.fut.repr = {};
+      }
+
+      KJ_DISALLOW_COPY(Impl);
+
+      void poll(const ::kj_rs::KjWaker& waker, ExceptionOrValue& output) noexcept {
+        ::kj_rs::FuturePoller<Output> poller;
+        poller.poll(
+            [this, &waker](void* result) { return fut.poll(&fut, &waker, result); }, output);
+      }
+
+      RustFuture fut;
+    };
+
+    return kj::_::PromiseNode::to<kj::Promise<T>>(
+        kj::_::allocPromise<FutureAwaiter<Impl>>(Impl(*this)));
+  }
+
+  ::std::array<std::uintptr_t, 2> repr;
+  PollCallback poll;
+  DropCallback drop;
 };
+
+static_assert(sizeof(RustFuture) == 4 * sizeof(std::uintptr_t), "incorrect RustFuture layout");
+}  // namespace repr
 
 }  // namespace kj_rs
