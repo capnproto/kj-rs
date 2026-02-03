@@ -1,5 +1,7 @@
 # Rust bindings for libkj
 
+**NOTE: `kj-rs` has been merged into [`workerd-cxx`](https://github.com/cloudflare/workerd-cxx). This repository is no longer updated.**
+
 This crate contains code which allows Rust code to use parts of KJ, the core library underpinning the C++ implementation of Cap'n Proto. At present, its main feature is the ability to await KJ Promises from Rust, and to await Rust Futures from KJ coroutines.
 
 ## Building
